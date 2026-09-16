@@ -1,85 +1,135 @@
 name: Publicar en el Marketplace
 
-# El disparador es el tag, no un push a main: publicar es una decision
-# explicita, no una consecuencia de mergear.
+# El disparador es el bump de version, no un tag.
+#
+# Subir la version en `package.json` ES la decision de publicar, y queda a la
+# vista en el diff del pull request antes de mergear. Un tag aparte era una
+# segunda ceremonia que ademas podia desincronizarse del manifiesto; aca eso no
+# puede pasar, porque la version es el disparador.
+#
+# Cualquier merge que no toque la version no publica nada.
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [main]
+    paths: ['package.json']
+  # Escotilla de rescate: si la publicacion falla a mitad de camino (un PAT
+  # vencido, por ejemplo), esto permite reintentar sin inventar un commit.
+  workflow_dispatch:
 
 permissions:
-  contents: write # para crear la Release y adjuntarle el .vsix
-  id-token: write # para que GitHub emita el token OIDC del Marketplace
+  contents: write # para empujar el tag y crear la Release
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # hace falta el commit anterior para comparar versiones
 
       # Los tests corren sobre Node 20 a proposito: VS Code 1.90, que es el
       # `engines.vscode` minimo declarado, ejecuta las extensiones sobre Node
-      # 20. Verificar sobre un runtime mas nuevo que el real taparia justo los
-      # fallos que importan.
+      # 20. Verificar sobre un runtime mas nuevo taparia los fallos que importan.
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      - run: npm ci
-
-      # El tag y el manifiesto tienen que decir lo mismo. Si no, el Marketplace
-      # publica una version distinta de la que el tag promete, y a partir de ahi
-      # el historial de git deja de explicar que hay publicado.
-      - name: Verificar que el tag coincide con package.json
+      - name: Ver si la version cambio
+        id: check
         run: |
-          TAG="${GITHUB_REF_NAME#v}"
-          MANIFEST="$(node -p "require('./package.json').version")"
-          if [ "$TAG" != "$MANIFEST" ]; then
-            echo "El tag dice $TAG y package.json dice $MANIFEST." >&2
-            echo "Corregi la version del manifiesto o el tag, y volve a empezar." >&2
+          NEW="$(node -p "require('./package.json').version")"
+          OLD="$(git show HEAD~1:package.json 2>/dev/null \
+                 | node -pe "JSON.parse(require('fs').readFileSync(0,'utf8')).version" \
+                 2>/dev/null || echo '')"
+          echo "version=$NEW" >> "$GITHUB_OUTPUT"
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Ejecucion manual: se publica $NEW sin comparar."
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "$NEW" = "$OLD" ]; then
+            echo "La version sigue en $NEW. Se toco package.json pero no hay nada que publicar."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Un tag existente significa que esa version ya se publico. El
+          # Marketplace la rechazaria igual, pero mejor cortar antes y decir por que.
+          if git ls-remote --exit-code --tags origin "refs/tags/v$NEW" >/dev/null 2>&1; then
+            echo "El tag v$NEW ya existe: esa version ya se publico." >&2
             exit 1
           fi
 
-      - run: npm test
+          echo "Version: $OLD -> $NEW."
+          echo "publish=true" >> "$GITHUB_OUTPUT"
 
-      - run: npm run compile
+      - if: steps.check.outputs.publish == 'true'
+        run: npm ci
+
+      - if: steps.check.outputs.publish == 'true'
+        run: npm test
+
+      - if: steps.check.outputs.publish == 'true'
+        run: npm run compile
 
       # @xmldom/xmldom es dependencia de runtime, y .vscodeignore la excluye con
       # `node_modules/**` para volver a incluirla por negacion. Si el orden de
       # los patrones se la come, la extension revienta al activarse recien
       # instalada y el fallo no aparece en ninguna otra prueba.
-      - name: Confirmar que @xmldom/xmldom quedo adentro
+      - if: steps.check.outputs.publish == 'true'
+        name: Confirmar que @xmldom/xmldom quedo adentro
         run: |
           if ! npx --yes @vscode/vsce ls | grep -q '^node_modules/@xmldom/xmldom/'; then
             echo "@xmldom/xmldom no esta en el paquete: la extension fallaria al activarse." >&2
             exit 1
           fi
 
-      - name: Empaquetar
-        run: npx --yes @vscode/vsce package --out "xpp-source-viewer-${GITHUB_REF_NAME#v}.vsix"
+      - if: steps.check.outputs.publish == 'true'
+        name: Empaquetar
+        run: npx --yes @vscode/vsce package --out "xpp-source-viewer-${{ steps.check.outputs.version }}.vsix"
 
-      # `vsce publish --oidc` necesita Node 22 o superior. Se cambia de runtime
-      # recien aca, despues de que todo lo que se verifica ya se verifico sobre
-      # el Node 20 que usa el editor.
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      # Trusted publishing: GitHub emite un token OIDC para la audiencia del
-      # Marketplace y vsce lo canjea por una credencial efimera. No hay PAT ni
-      # ningun secreto de larga vida en el repositorio.
+      # ------------------------------------------------------------------
+      # PAT: ESTO CADUCA EL 1 DE DICIEMBRE DE 2026
       #
-      # Requiere una politica de trusted publishing dada de alta en el portal
-      # del Marketplace para este repositorio y este workflow. vsce NO cae de
-      # vuelta a un PAT si el canje falla: si la politica no esta, esto corta.
+      # Los PAT globales de Azure DevOps se retiran ese dia, y el Marketplace
+      # exige justamente alcance global ("All accessible organizations") porque
+      # vive en una organizacion distinta de la del publisher.
+      #
+      # El reemplazo es trusted publishing por OIDC, que no necesita ningun
+      # secreto. Cuando el portal del Marketplace exponga la politica —hoy no
+      # existe en ninguna pantalla— la migracion es:
+      #
+      #   1. Dar de alta la politica apuntando a este repo y a este workflow.
+      #   2. Reemplazar el paso de abajo por:
+      #        run: npx --yes @vscode/vsce publish --oidc --packagePath "..."
+      #      sin el bloque `env:`.
+      #   3. Agregar `id-token: write` a los permisos del job.
+      #   4. Borrar el secreto VSCE_PAT.
       #
       # Se publica el .vsix ya construido en vez de reconstruirlo, para que lo
       # que llega al Marketplace sea exactamente el artefacto verificado arriba.
-      - name: Publicar en el Marketplace
-        run: npx --yes @vscode/vsce publish --oidc --packagePath "xpp-source-viewer-${GITHUB_REF_NAME#v}.vsix"
+      # ------------------------------------------------------------------
+      - if: steps.check.outputs.publish == 'true'
+        name: Publicar en el Marketplace
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: npx --yes @vscode/vsce publish --packagePath "xpp-source-viewer-${{ steps.check.outputs.version }}.vsix"
 
-      - name: Publicar la Release en GitHub
+      # El tag se crea DESPUES de publicar. Si la publicacion falla, no queda un
+      # tag afirmando que esa version salio.
+      - if: steps.check.outputs.publish == 'true'
+        name: Etiquetar la version publicada
+        run: |
+          git tag "v${{ steps.check.outputs.version }}"
+          git push origin "v${{ steps.check.outputs.version }}"
+
+      - if: steps.check.outputs.publish == 'true'
+        name: Publicar la Release en GitHub
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" xpp-source-viewer-*.vsix --generate-notes
+        run: |
+          gh release create "v${{ steps.check.outputs.version }}" \
+            xpp-source-viewer-*.vsix --generate-notes

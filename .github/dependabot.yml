@@ -1,0 +1,19 @@
+version: 2
+
+# Mensual y no semanal: el proyecto tiene tres dependencias de desarrollo y una
+# de runtime. Semanal seria ruido que se termina ignorando, y una alerta que se
+# ignora no sirve para nada.
+updates:
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'monthly'
+    commit-message:
+      prefix: 'ci'
+
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'monthly'
+    commit-message:
+      prefix: 'chore'
