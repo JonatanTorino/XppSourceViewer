@@ -30,7 +30,7 @@ jobs:
       # Los tests corren sobre Node 20 a proposito: VS Code 1.90, que es el
       # `engines.vscode` minimo declarado, ejecuta las extensiones sobre Node
       # 20. Verificar sobre un runtime mas nuevo taparia los fallos que importan.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: 'npm'
