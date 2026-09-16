@@ -1,6 +1,6 @@
 {
-  "name": "transpile-to-xpp",
-  "displayName": "X++ Transpiler for Dynamics 365 F&O",
+  "name": "xpp-source-viewer",
+  "displayName": "X++ Source Viewer for Dynamics 365 F&O",
   "description": "Reconstruye código X++ legible desde los XML de metadatos de Dynamics 365 Finance & Operations, con soporte opcional de Language Server.",
   "version": "0.1.0",
   "publisher": "JonatanTorino",
@@ -19,7 +19,11 @@
     "dynamics 365",
     "finance and operations",
     "d365fo",
-    "ax"
+    "ax",
+    "metadata",
+    "xml",
+    "axclass",
+    "aot"
   ],
   "main": "./out/src/extension.js",
   "activationEvents": [
@@ -112,7 +116,7 @@
       ]
     },
     "configuration": {
-      "title": "X++ Transpiler",
+      "title": "X++ Source Viewer",
       "properties": {
         "xpp.transpile.autoPreview": {
           "type": "string",
@@ -231,10 +235,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/JonatanTorino/TranspileToXpp.git"
+    "url": "https://github.com/JonatanTorino/XppSourceViewer.git"
   },
   "bugs": {
-    "url": "https://github.com/JonatanTorino/TranspileToXpp/issues"
+    "url": "https://github.com/JonatanTorino/XppSourceViewer/issues"
   },
-  "homepage": "https://github.com/JonatanTorino/TranspileToXpp#readme"
+  "homepage": "https://github.com/JonatanTorino/XppSourceViewer#readme"
 }

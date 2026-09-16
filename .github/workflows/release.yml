@@ -57,7 +57,7 @@ jobs:
           fi
 
       - name: Empaquetar
-        run: npx --yes @vscode/vsce package --out "transpile-to-xpp-${GITHUB_REF_NAME#v}.vsix"
+        run: npx --yes @vscode/vsce package --out "xpp-source-viewer-${GITHUB_REF_NAME#v}.vsix"
 
       # `vsce publish --oidc` necesita Node 22 o superior. Se cambia de runtime
       # recien aca, despues de que todo lo que se verifica ya se verifico sobre
@@ -77,9 +77,9 @@ jobs:
       # Se publica el .vsix ya construido en vez de reconstruirlo, para que lo
       # que llega al Marketplace sea exactamente el artefacto verificado arriba.
       - name: Publicar en el Marketplace
-        run: npx --yes @vscode/vsce publish --oidc --packagePath "transpile-to-xpp-${GITHUB_REF_NAME#v}.vsix"
+        run: npx --yes @vscode/vsce publish --oidc --packagePath "xpp-source-viewer-${GITHUB_REF_NAME#v}.vsix"
 
       - name: Publicar la Release en GitHub
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" transpile-to-xpp-*.vsix --generate-notes
+        run: gh release create "$GITHUB_REF_NAME" xpp-source-viewer-*.vsix --generate-notes

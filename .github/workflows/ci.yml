@@ -45,9 +45,9 @@ jobs:
           fi
 
       - name: Empaquetar
-        run: npx --yes @vscode/vsce package --out transpile-to-xpp.vsix
+        run: npx --yes @vscode/vsce package --out xpp-source-viewer.vsix
 
       - uses: actions/upload-artifact@v4
         with:
           name: vsix
-          path: transpile-to-xpp.vsix
+          path: xpp-source-viewer.vsix

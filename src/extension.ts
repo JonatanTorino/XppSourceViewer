@@ -22,7 +22,7 @@ import { AutoPreviewState } from './statusBar';
 export const XPP_SCHEME = 'xpp-preview';
 
 export function activate(context: vscode.ExtensionContext): void {
-    const output = new Logger('X++ Transpiler');
+    const output = new Logger('X++ Source Viewer');
     const autoState = new AutoPreviewState();
     context.subscriptions.push(output, autoState);
 
@@ -129,7 +129,7 @@ export function activate(context: vscode.ExtensionContext): void {
         })
     );
 
-    output.info('Extensión X++ Transpiler activada.');
+    output.info('Extensión X++ Source Viewer activada.');
 }
 
 export function deactivate(): void {

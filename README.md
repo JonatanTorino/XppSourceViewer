@@ -1,4 +1,4 @@
-# X++ Transpiler for Dynamics 365 F&O
+# X++ Source Viewer for Dynamics 365 F&O
 
 Leé el código X++ de tus metadatos de Dynamics 365 Finance & Operations sin
 pelearte con el XML.
