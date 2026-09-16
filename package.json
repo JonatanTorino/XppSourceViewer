@@ -3,7 +3,7 @@
   "displayName": "X++ Transpiler for Dynamics 365 F&O",
   "description": "Reconstruye código X++ legible desde los XML de metadatos de Dynamics 365 Finance & Operations, con soporte opcional de Language Server.",
   "version": "0.1.0",
-  "publisher": "jonatantorino",
+  "publisher": "JonatanTorino",
   "license": "MIT",
   "engines": {
     "vscode": "^1.90.0",
@@ -217,7 +217,8 @@
     "watch": "tsc -w -p ./",
     "test": "npm run compile:core && node --test \"out/test/*.test.js\"",
     "vscode:prepublish": "npm run compile",
-    "package": "vsce package",
+    "package": "npx --yes @vscode/vsce package",
+    "publish": "npx --yes @vscode/vsce publish",
     "compile:core": "tsc -p tsconfig.core.json"
   },
   "dependencies": {

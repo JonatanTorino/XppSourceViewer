@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Solo lectura: este workflow no publica nada. Los PR de forks nunca reciben
+# secretos, y acá directamente no hay ninguno que dar.
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - run: npm test
+
+      # `main` apunta a out/src/extension.js, que solo sale del compilado
+      # completo. `npm test` compila nada mas el nucleo.
+      - run: npm run compile
+
+      # Empaquetar en cada commit es la unica forma de saber que el .vsix sigue
+      # llevando node_modules/@xmldom/xmldom. Es dependencia de runtime, y
+      # .vscodeignore la excluye con `node_modules/**` para volver a incluirla
+      # por negacion: si el orden de los patrones se la come, la extension
+      # revienta al activarse recien instalada y el fallo no aparece antes.
+      - name: Ver que entra en el paquete
+        run: npx --yes @vscode/vsce ls
+
+      - name: Confirmar que @xmldom/xmldom quedo adentro
+        run: |
+          if ! npx --yes @vscode/vsce ls | grep -q '^node_modules/@xmldom/xmldom/'; then
+            echo "@xmldom/xmldom no esta en el paquete: la extension fallaria al activarse." >&2
+            exit 1
+          fi
+
+      - name: Empaquetar
+        run: npx --yes @vscode/vsce package --out transpile-to-xpp.vsix
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vsix
+          path: transpile-to-xpp.vsix

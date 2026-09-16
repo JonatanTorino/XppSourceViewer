@@ -1,0 +1,64 @@
+name: Publicar en el Marketplace
+
+# El disparador es el tag, no un push a main: publicar es una decision
+# explicita, no una consecuencia de mergear. Los PR de forks no disparan esto,
+# asi que VSCE_PAT nunca queda al alcance de codigo de terceros.
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write # para crear la Release y adjuntarle el .vsix
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      # El tag y el manifiesto tienen que decir lo mismo. Si no, el Marketplace
+      # publica una version distinta de la que el tag promete, y a partir de ahi
+      # el historial de git deja de explicar que hay publicado.
+      - name: Verificar que el tag coincide con package.json
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          MANIFEST="$(node -p "require('./package.json').version")"
+          if [ "$TAG" != "$MANIFEST" ]; then
+            echo "El tag dice $TAG y package.json dice $MANIFEST." >&2
+            echo "Corregi la version del manifiesto o el tag, y volve a empezar." >&2
+            exit 1
+          fi
+
+      - run: npm test
+
+      - run: npm run compile
+
+      - name: Confirmar que @xmldom/xmldom quedo adentro
+        run: |
+          if ! npx --yes @vscode/vsce ls | grep -q '^node_modules/@xmldom/xmldom/'; then
+            echo "@xmldom/xmldom no esta en el paquete: la extension fallaria al activarse." >&2
+            exit 1
+          fi
+
+      - name: Empaquetar
+        run: npx --yes @vscode/vsce package --out "transpile-to-xpp-${GITHUB_REF_NAME#v}.vsix"
+
+      # Se publica el .vsix ya construido, no se reconstruye: lo que llega al
+      # Marketplace es exactamente el artefacto que se verifico recien.
+      - name: Publicar en el Marketplace
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: npx --yes @vscode/vsce publish --packagePath "transpile-to-xpp-${GITHUB_REF_NAME#v}.vsix"
+
+      - name: Publicar la Release en GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" transpile-to-xpp-*.vsix --generate-notes
