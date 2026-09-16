@@ -1,0 +1,34 @@
+# Fuentes: al Marketplace va solo lo compilado.
+src/**
+test/**
+docs/**
+tsconfig.json
+tsconfig.core.json
+**/*.ts
+**/*.map
+
+# Los tests compilados no son parte del producto.
+out/test/**
+
+# Desarrollo
+.vscode/**
+.github/**
+node_modules/**
+!node_modules/@xmldom/**
+
+# La extensión no lleva binarios. La regla queda como red de seguridad.
+**/*.vsix
+**/*.dll
+**/*.exe
+
+# Carpetas ocultas de la raíz: .git, .vscode, y las que dejen otras herramientas
+# (por ejemplo .kilo, que crea worktrees con una copia entera del repositorio).
+# Sin esta regla, cualquier carpeta nueva que aparezca se empaqueta sola.
+.*/**
+
+# Metadatos del repositorio, no de la extensión.
+.gitignore
+.gitattributes
+.vscodeignore
+.eslintrc*
+package-lock.json

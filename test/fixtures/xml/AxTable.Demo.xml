@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxTable xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>DemoCompanyInfo</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+public class DemoCompanyInfo extends common
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>find</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// find
+    /// </summary>
+    public static DemoCompanyInfo find(RecId _recId, boolean _forUpdate = false)
+    {
+        DemoCompanyInfo demoCompanyInfo;
+
+        demoCompanyInfo.selectForUpdate(_forUpdate);
+
+        select firstonly demoCompanyInfo
+            where demoCompanyInfo.RecId == _recId;
+
+        return demoCompanyInfo;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>insert</Name>
+				<Source><![CDATA[
+    public void insert()
+    {
+        super();
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+	<Fields>
+		<AxTableField xmlns="" i:type="AxTableFieldString">
+			<Name>TaxNum</Name>
+			<ExtendedDataType>DemoTaxNum</ExtendedDataType>
+		</AxTableField>
+	</Fields>
+</AxTable>

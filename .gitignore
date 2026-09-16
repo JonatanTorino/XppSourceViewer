@@ -1,0 +1,35 @@
+# Dependencias y salida de compilación
+/node_modules
+/out
+/dist
+
+# Paquetes de la extensión
+*.vsix
+
+# Binarios de D365FO: nunca se versionan. La extensión no los necesita, pero la
+# regla evita que una copia local termine en el repositorio por accidente.
+/server
+/components
+
+# Worktrees y cachés que dejan otras herramientas en la raíz.
+/.kilo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Entorno
+.env
+.env.local
+
+# Editor
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/settings.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Sistema operativo
+.DS_Store
+Thumbs.db

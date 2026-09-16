@@ -1,0 +1,12 @@
+# Normalizar a LF en el repositorio; el checkout usa lo nativo de la plataforma.
+* text=auto
+
+*.ts     text eol=lf
+*.json   text eol=lf
+*.md     text eol=lf
+*.ps1    text eol=crlf
+
+# Los fixtures son datos de prueba: se conservan tal cual vienen de D365FO, que
+# escribe CRLF. El transpilador normaliza igual, pero el byte exacto importa si
+# alguna vez se compara la salida carácter a carácter.
+test/fixtures/**/*.xml text eol=crlf

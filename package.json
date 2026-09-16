@@ -1,0 +1,239 @@
+{
+  "name": "transpile-to-xpp",
+  "displayName": "X++ Transpiler for Dynamics 365 F&O",
+  "description": "Reconstruye código X++ legible desde los XML de metadatos de Dynamics 365 Finance & Operations, con soporte opcional de Language Server.",
+  "version": "0.1.0",
+  "publisher": "jonatantorino",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.90.0",
+    "node": ">=20"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "keywords": [
+    "x++",
+    "xpp",
+    "dynamics 365",
+    "finance and operations",
+    "d365fo",
+    "ax"
+  ],
+  "main": "./out/src/extension.js",
+  "activationEvents": [
+    "onLanguage:xml"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "xpp",
+        "aliases": [
+          "X++",
+          "xpp"
+        ],
+        "extensions": [
+          ".xpp"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "xpp",
+        "scopeName": "source.xpp",
+        "path": "./syntaxes/xpp.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "xpp.transpile.toggle",
+        "title": "Ver como X++",
+        "category": "X++",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "xpp.transpile.saveAs",
+        "title": "Exportar a archivo .xpp",
+        "category": "X++",
+        "icon": "$(save-as)"
+      },
+      {
+        "command": "xpp.transpile.folder",
+        "title": "Exportar carpeta de metadatos a .xpp",
+        "category": "X++"
+      },
+      {
+        "command": "xpp.transpile.toggleAuto",
+        "title": "Pausar o reanudar la apertura automática",
+        "category": "X++"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "xpp.transpile.toggle",
+          "when": "resourceLangId == xml && xpp:isMetadata",
+          "group": "navigation@1"
+        },
+        {
+          "command": "xpp.transpile.saveAs",
+          "when": "resourceScheme == 'xpp-preview'",
+          "group": "navigation@1"
+        },
+        {
+          "command": "xpp.transpile.toggle",
+          "when": "resourceScheme == 'xpp-preview'",
+          "group": "navigation@2"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "xpp.transpile.folder",
+          "when": "explorerResourceIsFolder",
+          "group": "7_modification"
+        },
+        {
+          "command": "xpp.transpile.saveAs",
+          "when": "resourceLangId == xml",
+          "group": "7_modification"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "xpp.transpile.toggle",
+          "when": "resourceLangId == xml || resourceScheme == 'xpp-preview'"
+        },
+        {
+          "command": "xpp.transpile.saveAs",
+          "when": "resourceLangId == xml || resourceScheme == 'xpp-preview'"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "X++ Transpiler",
+      "properties": {
+        "xpp.transpile.autoPreview": {
+          "type": "string",
+          "enum": [
+            "never",
+            "ask",
+            "onOpen"
+          ],
+          "default": "never",
+          "enumDescriptions": [
+            "No hacer nada al abrir un XML de metadatos.",
+            "Preguntar con una notificacion, sin robar el foco.",
+            "Abrir la vista X++ automaticamente."
+          ],
+          "description": "Cuándo abrir automáticamente la vista X++ de un XML de metadatos."
+        },
+        "xpp.transpile.autoPreviewTypes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "Tipos de artefacto que se abren solos, por ejemplo `[\"AxClass\", \"AxForm\"]`. Vacio = todos. Solo afecta a la apertura automatica; los comandos siguen funcionando con cualquier tipo."
+        },
+        "xpp.transpile.include": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "Globs de rutas donde se permite la apertura automatica, por ejemplo `[\"**/Metadata/**\"]`. Vacio = en todas partes."
+        },
+        "xpp.transpile.exclude": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "Globs de rutas donde nunca se abre sola. Tiene prioridad sobre `#xpp.transpile.include#`."
+        },
+        "xpp.transpile.skipEmpty": {
+          "type": "boolean",
+          "default": true,
+          "description": "No abrir la vista de artefactos sin codigo X++, como las tablas de staging."
+        },
+        "xpp.transpile.viewColumn": {
+          "type": "string",
+          "enum": [
+            "beside",
+            "active",
+            "replace"
+          ],
+          "default": "beside",
+          "enumDescriptions": [
+            "Abrir al lado, dejando el XML visible.",
+            "Abrir en la columna activa, sin cerrar el XML.",
+            "Abrir en la columna activa como pestania fija, tapando el XML."
+          ],
+          "description": "Donde se abre la vista X++."
+        },
+        "xpp.transpile.preserveFocus": {
+          "type": "boolean",
+          "default": true,
+          "description": "Dejar el cursor en el XML cuando la vista se abre al lado. Sin esto, el foco salta a la vista X++."
+        },
+        "xpp.transpile.stripDocComments": {
+          "type": "boolean",
+          "default": false,
+          "description": "Quitar los comentarios de documentacion /// del X++ generado, para una lectura mas compacta."
+        },
+        "xpp.transpile.headerComment": {
+          "type": "boolean",
+          "default": false,
+          "description": "Anteponer una cabecera con el tipo, el nombre, la cantidad de metodos y la ruta de origen."
+        },
+        "xpp.transpile.eol": {
+          "type": "string",
+          "enum": [
+            "crlf",
+            "lf"
+          ],
+          "default": "crlf",
+          "description": "Fin de línea del X++ generado. D365FO usa CRLF."
+        },
+        "xpp.transpile.outputDirectory": {
+          "type": "string",
+          "default": "",
+          "description": "Carpeta destino para los .xpp exportados. Vacío = junto al XML de origen."
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "xpp.transpile.toggle",
+        "key": "ctrl+alt+x",
+        "when": "resourceLangId == xml || resourceScheme == 'xpp-preview'"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -w -p ./",
+    "test": "npm run compile:core && node --test \"out/test/*.test.js\"",
+    "vscode:prepublish": "npm run compile",
+    "package": "vsce package",
+    "compile:core": "tsc -p tsconfig.core.json"
+  },
+  "dependencies": {
+    "@xmldom/xmldom": "^0.9.12"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "@types/vscode": "1.90.0",
+    "typescript": "^5.9.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JonatanTorino/TranspileToXpp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/JonatanTorino/TranspileToXpp/issues"
+  },
+  "homepage": "https://github.com/JonatanTorino/TranspileToXpp#readme"
+}

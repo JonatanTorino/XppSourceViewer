@@ -1,0 +1,67 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // Ventana limpia: solo esta extensión, sin ninguna otra cargada.
+      //
+      // `--disable-extensions` evita el choque con otras extensiones de X++ que
+      // se activan con `onLanguage:xml` y redirigen el editor apenas se abre un
+      // XML. Con una de esas activa no hay convivencia posible.
+      "name": "Ejecutar la extensión (ventana limpia)",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--disable-extensions",
+        "--extensionDevelopmentPath=${workspaceFolder}"
+      ],
+      "outFiles": ["${workspaceFolder}/out/**/*.js"],
+      "preLaunchTask": "npm: compile"
+    },
+    {
+      // Con el resto de las extensiones cargadas, para verificar que convive con
+      // un entorno real.
+      "name": "Ejecutar la extensión (con otras extensiones)",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
+      "outFiles": ["${workspaceFolder}/out/**/*.js"],
+      "preLaunchTask": "npm: compile"
+    },
+    {
+      // Abre los fixtures del repositorio, que alcanzan para ver la extensión
+      // funcionando sin tener a mano un repositorio de metadatos.
+      "name": "Ejecutar sobre los fixtures",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--disable-extensions",
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "${workspaceFolder}/test/fixtures/xml"
+      ],
+      "outFiles": ["${workspaceFolder}/out/**/*.js"],
+      "preLaunchTask": "npm: compile"
+    },
+    {
+      // Pregunta por la carpeta al arrancar, para no dejar rutas de nadie
+      // escritas en el repositorio.
+      "name": "Ejecutar sobre un repositorio de metadatos...",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--disable-extensions",
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "${input:metadataPath}"
+      ],
+      "outFiles": ["${workspaceFolder}/out/**/*.js"],
+      "preLaunchTask": "npm: compile"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "metadataPath",
+      "type": "promptString",
+      "description": "Ruta a la carpeta de metadatos de D365FO (la que contiene los paquetes)",
+      "default": "C:\\AOSService\\PackagesLocalDirectory"
+    }
+  ]
+}

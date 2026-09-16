@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>DemoEventSubscriber</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+internal final class DemoEventSubscriber
+{
+    private int counter;
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>registerKeys</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// registerKeys
+    /// </summary>
+    /// <param name="_keys">Set</param>
+    [SubscribesTo(classStr(DemoDiscoveryService), delegateStr(DemoDiscoveryService, registerKeys))]
+    public static void registerKeys(Set _keys)
+    {
+        _keys.add(configurationKeyNum(DemoExtension));
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>increment</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// increment
+    /// </summary>
+    public void increment()
+    {
+        counter++;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>
