@@ -81,14 +81,14 @@ export function transpile(xml: string, options: TranspileOptions = {}): Transpil
 
     if (!root || parseErrors.length > 0) {
         throw new NotMetadataError(
-            `El XML no se pudo parsear: ${parseErrors[0] ?? 'sin elemento raíz'}`
+            `The XML could not be parsed: ${parseErrors[0] ?? 'no root element'}`
         );
     }
 
     const kind = tagOf(root);
     if (!/^Ax[A-Z]/.test(kind)) {
         throw new NotMetadataError(
-            `El elemento raíz es <${kind}>, que no es un artefacto de metadatos de D365FO.`
+            `The root element is <${kind}>, which is not a D365FO metadata artifact.`
         );
     }
 
@@ -103,7 +103,7 @@ export function transpile(xml: string, options: TranspileOptions = {}): Transpil
         if (!isSourceBearingKind(kind)) {
             diagnostics.push({
                 severity: 'info',
-                message: `Los artefactos de tipo ${kind} no llevan código X++ embebido.`
+                message: `${kind} artifacts carry no embedded X++ source.`
             });
         } else {
             diagnostics.push({
@@ -145,7 +145,7 @@ export function transpile(xml: string, options: TranspileOptions = {}): Transpil
         diagnostics.push({
             severity: 'info',
             message:
-                'El artefacto declara <SourceCode> pero está vacío. Es lo normal en tablas de staging y artefactos puramente declarativos.'
+                'The artifact declares <SourceCode> but it is empty. That is normal for staging tables and purely declarative artifacts.'
         });
     }
 

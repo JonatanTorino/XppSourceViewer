@@ -98,15 +98,15 @@ export class XppContentProvider
                 return [
                     `// ${result.kind} ${result.name}`,
                     '//',
-                    '// Este artefacto no tiene código X++ embebido.',
+                    '// This artifact carries no embedded X++ source.',
                     ...result.diagnostics.map((d) => `// ${d.message}`)
                 ].join('\n');
             }
             return result.xpp;
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
-            this.output.error(`No se pudo transpilar ${source.fsPath}: ${message}`);
-            return `// No se pudo transpilar este archivo.\n// ${message}`;
+            this.output.error(`Could not reconstruct ${source.fsPath}: ${message}`);
+            return `// Could not reconstruct this file.\n// ${message}`;
         }
     }
 
@@ -144,7 +144,7 @@ async function resolveSource(candidate?: vscode.Uri): Promise<vscode.Uri | undef
             return source;
         }
     }
-    vscode.window.showWarningMessage('Abrí un XML de metadatos de D365FO para transpilarlo.');
+    vscode.window.showWarningMessage('Open a D365FO metadata XML to reconstruct its X++.');
     return undefined;
 }
 
@@ -177,7 +177,7 @@ export async function openPreview(
     if (!result) {
         if (!options.silent) {
             void vscode.window.showWarningMessage(
-                `${basename(source.fsPath)} no es un XML de metadatos de D365FO.`
+                `${basename(source.fsPath)} is not a D365FO metadata XML.`
             );
         }
         return false;
@@ -185,7 +185,7 @@ export async function openPreview(
     if (result.empty && config.skipEmpty) {
         if (!options.silent) {
             void vscode.window.showInformationMessage(
-                `${result.kind} ${result.name} no tiene código X++.`
+                `${result.kind} ${result.name} carries no X++ source.`
             );
         }
         return false;
@@ -218,7 +218,7 @@ export function registerTranspileCommands(
     const report = (error: unknown): void => {
         const message = error instanceof Error ? error.message : String(error);
         output.error(message);
-        void vscode.window.showErrorMessage(`No se pudo transpilar: ${message}`);
+        void vscode.window.showErrorMessage(`Could not reconstruct the X++: ${message}`);
     };
 
     // Unico comando de vista: desde el XML abre el X++, desde el X++ vuelve al
@@ -255,7 +255,7 @@ export function registerTranspileCommands(
                 const result = await transpileFile(source);
                 if (!result || result.empty) {
                     vscode.window.showWarningMessage(
-                        `${basename(source.fsPath)} no tiene código X++ para exportar.`
+                        `${basename(source.fsPath)} has no X++ source to export.`
                     );
                     return;
                 }
@@ -273,7 +273,7 @@ export function registerTranspileCommands(
                 await fs.writeFile(target.fsPath, result.xpp, 'utf8');
                 const open = await vscode.workspace.openTextDocument(target);
                 await vscode.window.showTextDocument(open);
-                output.info(`Exportado ${result.kind} ${result.name} a ${target.fsPath}`);
+                output.info(`Exported ${result.kind} ${result.name} to ${target.fsPath}`);
             } catch (error) {
                 report(error);
             }
@@ -288,7 +288,7 @@ export function registerTranspileCommands(
                     await vscode.window.showOpenDialog({
                         canSelectFolders: true,
                         canSelectFiles: false,
-                        openLabel: 'Exportar esta carpeta'
+                        openLabel: 'Export this folder'
                     })
                 )?.[0];
             if (!root) {
@@ -298,7 +298,7 @@ export function registerTranspileCommands(
             const destination = await vscode.window.showOpenDialog({
                 canSelectFolders: true,
                 canSelectFiles: false,
-                openLabel: 'Guardar los .xpp acá'
+                openLabel: 'Save the .xpp files here'
             });
             if (!destination?.[0]) {
                 return;
@@ -308,7 +308,7 @@ export function registerTranspileCommands(
             await vscode.window.withProgress(
                 {
                     location: vscode.ProgressLocation.Notification,
-                    title: 'Exportando metadatos a X++',
+                    title: 'Exporting metadata to X++',
                     cancellable: true
                 },
                 async (progress, token) => {
@@ -349,14 +349,14 @@ export function registerTranspileCommands(
                         } catch (error) {
                             skipped++;
                             output.warn(
-                                `Se omitió ${file.fsPath}: ${
+                                `Skipped ${file.fsPath}: ${
                                     error instanceof Error ? error.message : String(error)
                                 }`
                             );
                         }
                     }
 
-                    const summary = `Se exportaron ${written} artefactos a ${outputRoot}. Se omitieron ${skipped} sin código X++.`;
+                    const summary = `Exported ${written} artifacts to ${outputRoot}. Skipped ${skipped} with no X++ source.`;
                     output.info(summary);
                     void vscode.window.showInformationMessage(summary);
                 }

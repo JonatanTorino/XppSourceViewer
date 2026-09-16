@@ -393,7 +393,7 @@ describe('headerComment', () => {
             eol: 'lf',
             headerComment: true
         });
-        assert.match(result.xpp, /^\/\/ AxClass DemoEventSubscriber — 2 métodos\n/);
+        assert.match(result.xpp, /^\/\/ AxClass DemoEventSubscriber — 2 methods\n/);
     });
 
     it('usa el singular cuando hay un solo método', () => {
@@ -401,7 +401,7 @@ describe('headerComment', () => {
             eol: 'lf',
             headerComment: true
         });
-        assert.match(result.xpp, /— 1 método\n/);
+        assert.match(result.xpp, /— 1 method\n/);
     });
 
     it('incluye la procedencia cuando se la pasan', () => {

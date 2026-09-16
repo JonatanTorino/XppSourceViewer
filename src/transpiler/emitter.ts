@@ -95,7 +95,7 @@ export function emit(unit: SourceUnit): EmitOutcome {
         diagnostics.push({
             severity: 'warning',
             message:
-                'El artefacto trae <UnparsableSource>: D365FO no pudo parsear este código y lo guardó sin procesar. Se emite tal cual.'
+                'The artifact carries <UnparsableSource>: D365FO could not parse this source and stored it unprocessed. It is emitted as-is.'
         });
         return { text: unit.unparsableSource, methodCount: 0, diagnostics };
     }
@@ -110,7 +110,7 @@ export function emit(unit: SourceUnit): EmitOutcome {
         diagnostics.push({
             severity: 'warning',
             message:
-                'El artefacto tiene métodos pero no declara la clase (ni <Declaration> ni un método classDeclaration). Se emiten los métodos sin envoltorio.'
+                'The artifact has methods but declares no class (neither <Declaration> nor a classDeclaration method). The methods are emitted without a wrapper.'
         });
         const orphan: string[] = [];
         let orphanCount = 0;
@@ -131,7 +131,7 @@ export function emit(unit: SourceUnit): EmitOutcome {
         diagnostics.push({
             severity: 'warning',
             message:
-                'La declaración de clase no tiene llave de cierre. El X++ generado puede quedar desbalanceado.'
+                'The class declaration has no closing brace. The generated X++ may be unbalanced.'
         });
     }
 
@@ -192,7 +192,7 @@ export interface HeaderInfo {
 
 /** Cabecera con la procedencia del código, para no perder de vista de dónde salió. */
 export function buildHeader(info: HeaderInfo): string {
-    const plural = info.methodCount === 1 ? 'método' : 'métodos';
+    const plural = info.methodCount === 1 ? 'method' : 'methods';
     const lines = [`// ${info.kind} ${info.name} — ${info.methodCount} ${plural}`];
     if (info.sourceLabel) {
         lines.push(`// Origen: ${info.sourceLabel}`);

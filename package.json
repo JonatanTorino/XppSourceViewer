@@ -1,7 +1,7 @@
 {
   "name": "xpp-source-viewer",
   "displayName": "X++ Source Viewer for Dynamics 365 F&O",
-  "description": "Reconstruye código X++ legible desde los XML de metadatos de Dynamics 365 Finance & Operations, con soporte opcional de Language Server.",
+  "description": "Read the X++ source hidden in your Dynamics 365 Finance & Operations metadata XML, reconstructed as readable .xpp.",
   "version": "0.1.0",
   "publisher": "JonatanTorino",
   "license": "MIT",
@@ -53,24 +53,24 @@
     "commands": [
       {
         "command": "xpp.transpile.toggle",
-        "title": "Ver como X++",
+        "title": "View as X++",
         "category": "X++",
         "icon": "$(file-code)"
       },
       {
         "command": "xpp.transpile.saveAs",
-        "title": "Exportar a archivo .xpp",
+        "title": "Export to .xpp file",
         "category": "X++",
         "icon": "$(save-as)"
       },
       {
         "command": "xpp.transpile.folder",
-        "title": "Exportar carpeta de metadatos a .xpp",
+        "title": "Export metadata folder to .xpp",
         "category": "X++"
       },
       {
         "command": "xpp.transpile.toggleAuto",
-        "title": "Pausar o reanudar la apertura automática",
+        "title": "Pause or resume automatic opening",
         "category": "X++"
       }
     ],
@@ -127,11 +127,11 @@
           ],
           "default": "never",
           "enumDescriptions": [
-            "No hacer nada al abrir un XML de metadatos.",
-            "Preguntar con una notificacion, sin robar el foco.",
-            "Abrir la vista X++ automaticamente."
+            "Do nothing when a metadata XML is opened.",
+            "Ask with a notification, without stealing focus.",
+            "Open the X++ view automatically."
           ],
-          "description": "Cuándo abrir automáticamente la vista X++ de un XML de metadatos."
+          "description": "When to automatically open the X++ view of a metadata XML."
         },
         "xpp.transpile.autoPreviewTypes": {
           "type": "array",
@@ -139,7 +139,7 @@
             "type": "string"
           },
           "default": [],
-          "markdownDescription": "Tipos de artefacto que se abren solos, por ejemplo `[\"AxClass\", \"AxForm\"]`. Vacio = todos. Solo afecta a la apertura automatica; los comandos siguen funcionando con cualquier tipo."
+          "markdownDescription": "Artifact types that open on their own, for example `[\"AxClass\", \"AxForm\"]`. Empty = all of them. This only affects automatic opening; the commands keep working with any type."
         },
         "xpp.transpile.include": {
           "type": "array",
@@ -147,7 +147,7 @@
             "type": "string"
           },
           "default": [],
-          "markdownDescription": "Globs de rutas donde se permite la apertura automatica, por ejemplo `[\"**/Metadata/**\"]`. Vacio = en todas partes."
+          "markdownDescription": "Path globs where automatic opening is allowed, for example `[\"**/Metadata/**\"]`. Empty = everywhere."
         },
         "xpp.transpile.exclude": {
           "type": "array",
@@ -155,12 +155,12 @@
             "type": "string"
           },
           "default": [],
-          "markdownDescription": "Globs de rutas donde nunca se abre sola. Tiene prioridad sobre `#xpp.transpile.include#`."
+          "markdownDescription": "Path globs where it never opens on its own. Takes precedence over `#xpp.transpile.include#`."
         },
         "xpp.transpile.skipEmpty": {
           "type": "boolean",
           "default": true,
-          "description": "No abrir la vista de artefactos sin codigo X++, como las tablas de staging."
+          "description": "Do not open the view for artifacts with no X++ source, such as staging tables."
         },
         "xpp.transpile.viewColumn": {
           "type": "string",
@@ -171,26 +171,26 @@
           ],
           "default": "beside",
           "enumDescriptions": [
-            "Abrir al lado, dejando el XML visible.",
-            "Abrir en la columna activa, sin cerrar el XML.",
-            "Abrir en la columna activa como pestania fija, tapando el XML."
+            "Open beside it, keeping the XML visible.",
+            "Open in the active column, without closing the XML.",
+            "Open in the active column as a pinned tab, covering the XML."
           ],
-          "description": "Donde se abre la vista X++."
+          "description": "Where the X++ view opens."
         },
         "xpp.transpile.preserveFocus": {
           "type": "boolean",
           "default": true,
-          "description": "Dejar el cursor en el XML cuando la vista se abre al lado. Sin esto, el foco salta a la vista X++."
+          "description": "Keep the cursor in the XML when the view opens beside it. Without this, focus jumps to the X++ view."
         },
         "xpp.transpile.stripDocComments": {
           "type": "boolean",
           "default": false,
-          "description": "Quitar los comentarios de documentacion /// del X++ generado, para una lectura mas compacta."
+          "description": "Strip /// documentation comments from the generated X++, for a more compact read."
         },
         "xpp.transpile.headerComment": {
           "type": "boolean",
           "default": false,
-          "description": "Anteponer una cabecera con el tipo, el nombre, la cantidad de metodos y la ruta de origen."
+          "description": "Prepend a header with the type, the name, the method count and the source path."
         },
         "xpp.transpile.eol": {
           "type": "string",
@@ -199,12 +199,12 @@
             "lf"
           ],
           "default": "crlf",
-          "description": "Fin de línea del X++ generado. D365FO usa CRLF."
+          "description": "Line ending of the generated X++. D365FO uses CRLF."
         },
         "xpp.transpile.outputDirectory": {
           "type": "string",
           "default": "",
-          "description": "Carpeta destino para los .xpp exportados. Vacío = junto al XML de origen."
+          "description": "Target folder for exported .xpp files. Empty = next to the source XML."
         }
       }
     },

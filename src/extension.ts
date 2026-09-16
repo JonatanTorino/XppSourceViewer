@@ -44,8 +44,8 @@ export function activate(context: vscode.ExtensionContext): void {
             const suspended = autoState.toggleSuspended();
             output.info(
                 suspended
-                    ? 'Apertura automática pausada para esta sesión.'
-                    : 'Apertura automática reanudada.'
+                    ? 'Automatic opening paused for this session.'
+                    : 'Automatic opening resumed.'
             );
         })
     );
@@ -107,16 +107,16 @@ export function activate(context: vscode.ExtensionContext): void {
 
             if (config.autoPreview === 'ask') {
                 const answer = await vscode.window.showInformationMessage(
-                    `${kind} ${name}: ¿ver como X++?`,
-                    'Ver',
-                    'Ahora no',
-                    'Pausar en esta sesión'
+                    `${kind} ${name}: view as X++?`,
+                    'View',
+                    'Not now',
+                    'Pause for this session'
                 );
-                if (answer === 'Pausar en esta sesión') {
+                if (answer === 'Pause for this session') {
                     await vscode.commands.executeCommand('xpp.transpile.toggleAuto');
                     return;
                 }
-                if (answer !== 'Ver') {
+                if (answer !== 'View') {
                     return;
                 }
             }
@@ -129,7 +129,7 @@ export function activate(context: vscode.ExtensionContext): void {
         })
     );
 
-    output.info('Extensión X++ Source Viewer activada.');
+    output.info('X++ Source Viewer extension activated.');
 }
 
 export function deactivate(): void {

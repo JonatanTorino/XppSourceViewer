@@ -74,21 +74,21 @@ export class AutoPreviewState implements vscode.Disposable {
         if (mode === 'never') {
             this.item.text = '$(file-code) X++';
             this.item.tooltip =
-                'Ver el artefacto como X++.\nLa apertura automática está desactivada (xpp.transpile.autoPreview).';
+                'View this artifact as X++.\nAutomatic opening is off (xpp.transpile.autoPreview).';
             this.item.command = 'xpp.transpile.toggle';
             this.item.backgroundColor = undefined;
         } else if (this.suspended) {
-            this.item.text = '$(circle-slash) X++ pausado';
+            this.item.text = '$(circle-slash) X++ paused';
             this.item.tooltip =
-                'La apertura automática está pausada para esta sesión.\nClic para reanudarla.';
+                'Automatic opening is paused for this session.\nClick to resume it.';
             this.item.command = 'xpp.transpile.toggleAuto';
             this.item.backgroundColor = new vscode.ThemeColor(
                 'statusBarItem.warningBackground'
             );
         } else {
-            this.item.text = mode === 'ask' ? '$(question) X++ preguntar' : '$(sync) X++ auto';
+            this.item.text = mode === 'ask' ? '$(question) X++ ask' : '$(sync) X++ auto';
             this.item.tooltip =
-                'La apertura automática está activa.\nClic para pausarla durante esta sesión.';
+                'Automatic opening is active.\nClick to pause it for this session.';
             this.item.command = 'xpp.transpile.toggleAuto';
             this.item.backgroundColor = undefined;
         }

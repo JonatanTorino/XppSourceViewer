@@ -1,26 +1,26 @@
-# Registro de cambios
+# Changelog
 
-El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el
-versionado es [semántico](https://semver.org/lang/es/).
+This format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
+versioning is [semantic](https://semver.org/).
 
 ## [0.1.0] - 2026-09-16
 
-Primera versión.
+First release.
 
-### Agregado
+### Added
 
-- Transpilador de XML de metadatos de D365FO a X++, con recorrido recursivo que
-  recupera los métodos de todos los niveles de anidamiento: el artefacto, sus
-  orígenes de datos, los campos de cada origen y los controles.
-- Vista virtual de solo lectura con el X++ de un artefacto, que se regenera al
-  guardar el XML de origen. No se escribe nada al disco salvo que se pida.
-- Exportación a `.xpp` de un archivo o de un árbol de módulos completo.
-- Control de cuándo se abre la vista: modos `never` / `ask` / `onOpen`, filtros
-  por tipo de artefacto y por glob de ruta, y omisión de artefactos sin código.
-- Control de dónde aparece: `viewColumn` y `preserveFocus`.
-- Indicador en la barra de estado que pausa y reanuda la apertura automática
-  para la sesión, y `Ctrl+Alt+X` para alternar entre el XML y su vista.
-- Opciones de emisión: quitar los comentarios `///` y anteponer una cabecera con
-  la procedencia del código.
-- Gramática TextMate y configuración del lenguaje X++.
-- 47 tests sobre invariantes estructurales, ejecutables sin VS Code.
+- Reconstruction of X++ from D365FO metadata XML, with a recursive walk that
+  recovers methods at every nesting level: the artifact, its data sources, the
+  fields of each data source, and the controls.
+- Read-only virtual view holding an artifact's X++, regenerated when the source
+  XML is saved. Nothing is written to disk unless you ask for it.
+- Export to `.xpp` of a single file or of an entire module tree.
+- Control over when the view opens: `never` / `ask` / `onOpen` modes, filters by
+  artifact type and by path glob, and skipping of artifacts with no source.
+- Control over where it appears: `viewColumn` and `preserveFocus`.
+- Status bar indicator that pauses and resumes automatic opening for the
+  session, and `Ctrl+Alt+X` to toggle between the XML and its view.
+- Emission options: strip `///` comments and prepend a header with the origin of
+  the source.
+- TextMate grammar and language configuration for X++.
+- 47 tests over structural invariants, runnable without VS Code.

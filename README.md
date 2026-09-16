@@ -1,115 +1,115 @@
 # X++ Source Viewer for Dynamics 365 F&O
 
-Leé el código X++ de tus metadatos de Dynamics 365 Finance & Operations sin
-pelearte con el XML.
+Read the X++ source in your Dynamics 365 Finance & Operations metadata without
+fighting the XML.
 
-Un repositorio de metadatos de D365FO guarda el código dentro de los XML de cada
-artefacto, repartido en bloques `CDATA`. Revisar un pull request así es
-incómodo. Esta extensión reconstruye el `.xpp` equivalente y lo abre al lado del
-XML, con resaltado de sintaxis.
+A D365FO metadata repository stores the source inside each artifact's XML file,
+split across `CDATA` blocks. Reviewing a pull request that way is painful. This
+extension reconstructs the equivalent `.xpp` and opens it next to the XML, with
+syntax highlighting.
 
-## Características
+## Features
 
-**Vista X++ de cualquier artefacto.** `Ctrl+Alt+X` sobre un XML de metadatos y
-se abre el código reconstruido. Es un documento virtual de solo lectura: no se
-escribe nada al disco, así que el repositorio de metadatos no se llena de
-archivos generados.
+**X++ view of any artifact.** Press `Ctrl+Alt+X` on a metadata XML and the
+reconstructed source opens. It is a read-only virtual document: nothing is
+written to disk, so your metadata repository never fills up with generated
+files.
 
-**Reconstrucción completa de formularios.** Los métodos de un formulario están
-repartidos en cuatro niveles del XML —el formulario, sus orígenes de datos, los
-campos de cada origen y los controles—. Se recuperan todos, anidados como los
-muestra el editor de Visual Studio.
+**Complete form reconstruction.** A form's methods are spread across four levels
+of the XML — the form itself, its data sources, the fields of each data source,
+and the controls. All of them are recovered, nested the way the Visual Studio
+designer shows them.
 
-**Exportación a `.xpp`.** De un archivo, o de un árbol de módulos completo.
+**Export to `.xpp`.** A single file, or an entire module tree.
 
-**Control de cuándo aparece.** La apertura automática viene desactivada. Si se
-activa, puede limitarse por tipo de artefacto o por ruta, y pausarse con un clic
-desde la barra de estado.
+**Control over when it shows up.** Automatic opening is off by default. If you
+turn it on, you can limit it by artifact type or by path, and pause it with one
+click from the status bar.
 
-Soporta `AxClass`, `AxTable`, `AxForm`, `AxQuery`, `AxView` y
-`AxDataEntityView`. Los artefactos sin código —`AxEnum`, `AxEdt`, las
-extensiones `Ax*Extension`— se reportan como vacíos, no como error.
+Supports `AxClass`, `AxTable`, `AxForm`, `AxQuery`, `AxView` and
+`AxDataEntityView`. Artifacts that carry no source — `AxEnum`, `AxEdt`, the
+`Ax*Extension` types — are reported as empty rather than as an error.
 
-## Uso
+## Usage
 
-| Comando | Atajo | Qué hace |
+| Command | Shortcut | What it does |
 |---|---|---|
-| **X++: Ver como X++** | `Ctrl+Alt+X` | Desde el XML abre la vista; desde la vista vuelve al XML |
-| **X++: Exportar a archivo .xpp** | — | Guarda el X++ donde elijas |
-| **X++: Exportar carpeta de metadatos a .xpp** | — | Exporta un árbol entero, agrupado por tipo |
-| **X++: Pausar o reanudar la apertura automática** | — | Pausa la apertura automática por lo que dure la sesión |
+| **X++: View as X++** | `Ctrl+Alt+X` | From the XML it opens the view; from the view it goes back to the XML |
+| **X++: Export to .xpp file** | — | Saves the X++ wherever you choose |
+| **X++: Export metadata folder to .xpp** | — | Exports a whole tree, grouped by type |
+| **X++: Pause or resume automatic opening** | — | Pauses automatic opening for the rest of the session |
 
-Los dos primeros también están como botones en la barra de título del editor: el
-de ver, sobre el XML; el de exportar, sobre la vista X++.
+The first two are also buttons in the editor title bar: the view button on the
+XML, the export button on the X++ view.
 
-## Configuración
+## Settings
 
-### Cuándo se abre la vista
+### When the view opens
 
-| Opción | Por defecto | Qué controla |
+| Setting | Default | What it controls |
 |---|---|---|
-| `xpp.transpile.autoPreview` | `never` | `never` · `ask` (avisa sin robar el foco) · `onOpen` |
-| `xpp.transpile.autoPreviewTypes` | `[]` | Limitar a ciertos tipos, p. ej. `["AxClass","AxForm"]` |
-| `xpp.transpile.include` | `[]` | Globs de rutas donde se permite. Vacío = en todas partes |
-| `xpp.transpile.exclude` | `[]` | Globs donde nunca. Tiene prioridad sobre `include` |
-| `xpp.transpile.skipEmpty` | `true` | No abrir artefactos sin código |
+| `xpp.transpile.autoPreview` | `never` | `never` · `ask` (notifies without stealing focus) · `onOpen` |
+| `xpp.transpile.autoPreviewTypes` | `[]` | Restrict to certain types, e.g. `["AxClass","AxForm"]` |
+| `xpp.transpile.include` | `[]` | Path globs where it is allowed. Empty = everywhere |
+| `xpp.transpile.exclude` | `[]` | Globs where it never opens. Takes precedence over `include` |
+| `xpp.transpile.skipEmpty` | `true` | Do not open artifacts that carry no source |
 
-### Dónde aparece
+### Where it appears
 
-| Opción | Por defecto | Qué controla |
+| Setting | Default | What it controls |
 |---|---|---|
 | `xpp.transpile.viewColumn` | `beside` | `beside` · `active` · `replace` |
-| `xpp.transpile.preserveFocus` | `true` | Dejar el cursor en el XML cuando se abre al lado |
+| `xpp.transpile.preserveFocus` | `true` | Keep the cursor in the XML when the view opens beside it |
 
-### Qué se genera
+### What gets generated
 
-| Opción | Por defecto | Qué controla |
+| Setting | Default | What it controls |
 |---|---|---|
-| `xpp.transpile.eol` | `crlf` | Fin de línea del X++ generado |
-| `xpp.transpile.stripDocComments` | `false` | Quitar los comentarios `///` |
-| `xpp.transpile.headerComment` | `false` | Cabecera con tipo, nombre y procedencia |
-| `xpp.transpile.outputDirectory` | *(vacío)* | Carpeta destino de las exportaciones |
+| `xpp.transpile.eol` | `crlf` | Line ending of the generated X++ |
+| `xpp.transpile.stripDocComments` | `false` | Strip `///` documentation comments |
+| `xpp.transpile.headerComment` | `false` | Header with type, name and origin |
+| `xpp.transpile.outputDirectory` | *(empty)* | Target folder for exports |
 
-### El indicador de la barra de estado
+### The status bar indicator
 
-Muestra si la vista se va a abrir sola, y lo cambia con un clic:
+Shows whether the view will open on its own, and changes it with one click:
 
-| Indicador | Significa | Un clic |
+| Indicator | Means | One click |
 |---|---|---|
-| `X++` | La apertura automática está desactivada | Abre la vista |
-| `X++ auto` | Está activa | La pausa |
-| `X++ preguntar` | Modo `ask` | La pausa |
-| `X++ pausado` | Pausada en esta sesión | La reanuda |
+| `X++` | Automatic opening is off | Opens the view |
+| `X++ auto` | It is active | Pauses it |
+| `X++ ask` | `ask` mode | Pauses it |
+| `X++ paused` | Paused for this session | Resumes it |
 
-La pausa dura lo que dure la sesión: no modifica la configuración.
+The pause lasts for the session only: it does not change your settings.
 
-## Requisitos
+## Requirements
 
-Ninguno. La extensión lee los XML directamente: no necesita tener instaladas las
-herramientas de desarrollo de D365FO ni ningún componente adicional.
+None. The extension reads the XML directly: it does not need the D365FO
+developer tools or any additional component installed.
 
-## Problemas conocidos
+## Known issues
 
-- **La vista es de solo lectura.** Editar el X++ y que se escriba de vuelta al
-  XML no está soportado.
-- Los artefactos con `<UnparsableSource>` —código que D365FO no pudo parsear— se
-  muestran tal cual vienen, sin reconstruir.
+- **The view is read-only.** Editing the X++ and writing it back into the XML is
+  not supported.
+- Artifacts with `<UnparsableSource>` — source that D365FO itself could not
+  parse — are shown as-is, without reconstruction.
 
-## Cómo funciona
+## How it works
 
-El detalle de la reconstrucción —cómo se arman los formularios, qué tipos usan
-`<Declaration>` y cuáles no, cómo se verifica— está en
-[`docs/como-funciona.md`](docs/como-funciona.md).
+The details of the reconstruction — how forms are assembled, which types use
+`<Declaration>` and which do not, how it is verified — are in
+[`docs/como-funciona.md`](docs/como-funciona.md) (in Spanish).
 
-## Contribuir
+## Contributing
 
-Ver [`CONTRIBUTING.md`](CONTRIBUTING.md). Los tests corren con `npm test`, sin
-necesidad de abrir VS Code.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) (in Spanish). Tests run with
+`npm test`, without opening VS Code.
 
-## Notas de la versión
+## Release notes
 
-Ver [`CHANGELOG.md`](CHANGELOG.md).
+See [`CHANGELOG.md`](CHANGELOG.md).
 
-## Licencia
+## License
 
-MIT. Ver [`LICENSE`](LICENSE).
+MIT. See [`LICENSE`](LICENSE).
