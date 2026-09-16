@@ -1,8 +1,7 @@
 name: Publicar en el Marketplace
 
 # El disparador es el tag, no un push a main: publicar es una decision
-# explicita, no una consecuencia de mergear. Los PR de forks no disparan esto,
-# asi que VSCE_PAT nunca queda al alcance de codigo de terceros.
+# explicita, no una consecuencia de mergear.
 on:
   push:
     tags:
@@ -10,6 +9,7 @@ on:
 
 permissions:
   contents: write # para crear la Release y adjuntarle el .vsix
+  id-token: write # para que GitHub emita el token OIDC del Marketplace
 
 jobs:
   publish:
@@ -17,6 +17,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Los tests corren sobre Node 20 a proposito: VS Code 1.90, que es el
+      # `engines.vscode` minimo declarado, ejecuta las extensiones sobre Node
+      # 20. Verificar sobre un runtime mas nuevo que el real taparia justo los
+      # fallos que importan.
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -41,6 +45,10 @@ jobs:
 
       - run: npm run compile
 
+      # @xmldom/xmldom es dependencia de runtime, y .vscodeignore la excluye con
+      # `node_modules/**` para volver a incluirla por negacion. Si el orden de
+      # los patrones se la come, la extension revienta al activarse recien
+      # instalada y el fallo no aparece en ninguna otra prueba.
       - name: Confirmar que @xmldom/xmldom quedo adentro
         run: |
           if ! npx --yes @vscode/vsce ls | grep -q '^node_modules/@xmldom/xmldom/'; then
@@ -51,12 +59,25 @@ jobs:
       - name: Empaquetar
         run: npx --yes @vscode/vsce package --out "transpile-to-xpp-${GITHUB_REF_NAME#v}.vsix"
 
-      # Se publica el .vsix ya construido, no se reconstruye: lo que llega al
-      # Marketplace es exactamente el artefacto que se verifico recien.
+      # `vsce publish --oidc` necesita Node 22 o superior. Se cambia de runtime
+      # recien aca, despues de que todo lo que se verifica ya se verifico sobre
+      # el Node 20 que usa el editor.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Trusted publishing: GitHub emite un token OIDC para la audiencia del
+      # Marketplace y vsce lo canjea por una credencial efimera. No hay PAT ni
+      # ningun secreto de larga vida en el repositorio.
+      #
+      # Requiere una politica de trusted publishing dada de alta en el portal
+      # del Marketplace para este repositorio y este workflow. vsce NO cae de
+      # vuelta a un PAT si el canje falla: si la politica no esta, esto corta.
+      #
+      # Se publica el .vsix ya construido en vez de reconstruirlo, para que lo
+      # que llega al Marketplace sea exactamente el artefacto verificado arriba.
       - name: Publicar en el Marketplace
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
-        run: npx --yes @vscode/vsce publish --packagePath "transpile-to-xpp-${GITHUB_REF_NAME#v}.vsix"
+        run: npx --yes @vscode/vsce publish --oidc --packagePath "transpile-to-xpp-${GITHUB_REF_NAME#v}.vsix"
 
       - name: Publicar la Release en GitHub
         env:
