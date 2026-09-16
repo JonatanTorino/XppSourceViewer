@@ -17,3 +17,17 @@ updates:
       interval: 'monthly'
     commit-message:
       prefix: 'chore'
+    ignore:
+      # Los tipos siguen al piso de compatibilidad, no a la ultima version.
+      #
+      # `@types/vscode` tiene que coincidir con `engines.vscode` (^1.90.0).
+      # Existe justamente para impedir que se usen APIs que no existen en la
+      # version minima soportada: subirlo a la ultima deja compilar contra
+      # APIs inexistentes en 1.90 y la extension revienta en runtime para
+      # cualquiera que no este al dia. Actualizarlo es una decision deliberada
+      # que va junto con subir `engines.vscode`, no un bump automatico.
+      - dependency-name: '@types/vscode'
+      # Lo mismo en menor grado: estos tipos describen el Node del extension
+      # host, que en VS Code 1.90 es Node 20. Los minor y patch son seguros.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
