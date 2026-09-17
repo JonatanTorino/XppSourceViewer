@@ -3,13 +3,15 @@
  */
 
 import { promises as fs } from 'node:fs';
-import { basename, extname, join } from 'node:path';
+import { basename, dirname, extname, join, sep } from 'node:path';
 
 import * as vscode from 'vscode';
 
 import { readConfig, resolveViewColumn } from '../config';
 import { XPP_SCHEME } from '../extension';
 import type { Logger } from '../logger';
+import { type ExportLayout, targetPathFor } from '../exportLayout';
+import { filterDirs, splitTypedPath } from '../pathPicker';
 import { NotMetadataError, transpile, type TranspileResult } from '../transpiler';
 
 /**
@@ -269,6 +271,156 @@ export async function openPreview(
     return true;
 }
 
+/**
+ * Pregunta cómo ordenar la salida.
+ *
+ * Se pregunta en vez de configurarse porque la respuesta depende de para qué es
+ * la exportación, no de una preferencia estable: espejar sirve para comparar
+ * contra el repositorio de origen, y agrupar por tipo sirve para leer todo un
+ * tipo de artefacto de corrido. La misma persona quiere una u otra según el día.
+ *
+ * Devuelve `undefined` si se cancela, que es distinto de elegir un default.
+ */
+async function askExportLayout(): Promise<ExportLayout | undefined> {
+    const picked = await vscode.window.showQuickPick(
+        [
+            {
+                label: 'Mirror source folders',
+                description: 'MyModule/AxClass/Foo.xpp',
+                detail:
+                    'Keeps the structure of the metadata repository, so the export can be compared against where it came from.',
+                layout: 'mirror' as const
+            },
+            {
+                label: 'Group by artifact type',
+                description: 'AxClass/Foo.xpp',
+                detail:
+                    'One folder per type. Good for reading every class, or every form, one after another.',
+                layout: 'byType' as const
+            },
+            {
+                label: 'XppSource convention',
+                description: 'MyModel/AxClass_Foo.xpp',
+                detail:
+                    'One folder per model, type as a prefix. This is the layout the debugger looks for, so you can step into the X++ of packages that are deployed as binaries with no source.',
+                layout: 'xppSource' as const
+            }
+        ],
+        {
+            title: 'Export metadata folder to .xpp',
+            placeHolder: 'How should the exported files be organised?'
+        }
+    );
+    return picked?.layout;
+}
+
+/** Lo que distingue "quedate con esta ruta" de "entra a esta carpeta". */
+const USE_THIS_FOLDER = 'Use this folder';
+
+/**
+ * Pide una ruta escribiéndola, completando las subcarpetas a medida que se tipea.
+ *
+ * El primer item es siempre la ruta tal como está escrita, para poder aceptarla
+ * sin seguir navegando. El resto son las subcarpetas que siguen, y aceptar una
+ * de ellas **no cierra nada**: la agrega a lo escrito y vuelve a ofrecer lo que
+ * hay adentro. Eso es lo que permite bajar un árbol entero con las flechas sin
+ * terminar de escribir ningún nombre.
+ */
+function pickFolderByTyping(
+    title: string,
+    placeHolder: string,
+    seed?: string
+): Promise<vscode.Uri | undefined> {
+    return new Promise((resolve) => {
+        const quickPick = vscode.window.createQuickPick();
+        quickPick.title = title;
+        quickPick.placeholder = placeHolder;
+        // El filtrado lo hace `filterDirs` sobre el último segmento. El de VS
+        // Code compara contra la ruta entera y ofrecería carpetas de cualquier
+        // nivel, que es justo lo que confunde cuando se está navegando.
+        quickPick.matchOnDescription = false;
+        quickPick.matchOnDetail = false;
+
+        let settled = false;
+
+        const refresh = async (value: string): Promise<void> => {
+            const { dir, prefix } = splitTypedPath(value);
+
+            let names: string[] = [];
+            if (dir) {
+                try {
+                    const entries = await fs.readdir(dir, { withFileTypes: true });
+                    names = entries.filter((entry) => entry.isDirectory()).map((e) => e.name);
+                } catch {
+                    // Una ruta a medio escribir no existe todavía, y eso es
+                    // normal: simplemente no hay nada que sugerir.
+                    names = [];
+                }
+            }
+
+            const items: vscode.QuickPickItem[] = [];
+            if (value.trim()) {
+                items.push({ label: value, description: USE_THIS_FOLDER, alwaysShow: true });
+            }
+            for (const name of filterDirs(names, prefix)) {
+                items.push({ label: join(dir, name), alwaysShow: true });
+            }
+            quickPick.items = items;
+        };
+
+        quickPick.onDidChangeValue((value) => void refresh(value));
+
+        quickPick.onDidAccept(() => {
+            const picked = quickPick.selectedItems[0];
+            if (!picked) {
+                return;
+            }
+            if (picked.description === USE_THIS_FOLDER) {
+                settled = true;
+                resolve(vscode.Uri.file(picked.label.trim()));
+                quickPick.hide();
+                return;
+            }
+            quickPick.value = picked.label + sep;
+        });
+
+        quickPick.onDidHide(() => {
+            if (!settled) {
+                resolve(undefined);
+            }
+            quickPick.dispose();
+        });
+
+        quickPick.value = seed ? (seed.endsWith(sep) ? seed : seed + sep) : '';
+        void refresh(quickPick.value);
+        quickPick.show();
+    });
+}
+
+/**
+ * Pide una carpeta, por el diálogo del sistema o escribiendo la ruta.
+ *
+ * El default sigue siendo el diálogo, que es lo que hacía siempre. Escribir la
+ * ruta gana cuando ya se sabe adónde se va: el diálogo obliga a navegar un
+ * árbol con el mouse aunque se tenga la ruta en la cabeza.
+ */
+async function pickFolder(
+    title: string,
+    prompt: string,
+    seed?: string
+): Promise<vscode.Uri | undefined> {
+    if (readConfig().folderPicker === 'quickPick') {
+        return pickFolderByTyping(title, prompt, seed);
+    }
+    const picked = await vscode.window.showOpenDialog({
+        canSelectFolders: true,
+        canSelectFiles: false,
+        openLabel: prompt,
+        defaultUri: seed ? vscode.Uri.file(seed) : undefined
+    });
+    return picked?.[0];
+}
+
 export function registerTranspileCommands(
     context: vscode.ExtensionContext,
     output: Logger
@@ -361,28 +513,30 @@ export function registerTranspileCommands(
 
     context.subscriptions.push(
         vscode.commands.registerCommand('xpp.transpile.folder', async (folder?: vscode.Uri) => {
+            const title = 'Export metadata folder to .xpp';
+
             const root =
-                folder ??
-                (
-                    await vscode.window.showOpenDialog({
-                        canSelectFolders: true,
-                        canSelectFiles: false,
-                        openLabel: 'Export this folder'
-                    })
-                )?.[0];
+                folder ?? (await pickFolder(title, 'Folder to export'));
             if (!root) {
                 return;
             }
 
-            const destination = await vscode.window.showOpenDialog({
-                canSelectFolders: true,
-                canSelectFiles: false,
-                openLabel: 'Save the .xpp files here'
-            });
-            if (!destination?.[0]) {
+            // La carpeta de origen siembra la de destino: casi siempre estan
+            // cerca, y se ahorra volver a escribir la mitad de la ruta.
+            const destination = await pickFolder(
+                title,
+                'Where to save the .xpp files',
+                root.fsPath
+            );
+            if (!destination) {
                 return;
             }
-            const outputRoot = destination[0].fsPath;
+            const outputRoot = destination.fsPath;
+
+            const layout = await askExportLayout();
+            if (!layout) {
+                return;
+            }
 
             await vscode.window.withProgress(
                 {
@@ -417,13 +571,16 @@ export function registerTranspileCommands(
                                 skipped++;
                                 continue;
                             }
-                            const targetDir = join(outputRoot, result.kind);
-                            await fs.mkdir(targetDir, { recursive: true });
-                            await fs.writeFile(
-                                join(targetDir, `${result.name}.xpp`),
-                                result.xpp,
-                                'utf8'
+                            const target = targetPathFor(
+                                layout,
+                                outputRoot,
+                                root.fsPath,
+                                file.fsPath,
+                                result.kind,
+                                result.name
                             );
+                            await fs.mkdir(dirname(target), { recursive: true });
+                            await fs.writeFile(target, result.xpp, 'utf8');
                             written++;
                         } catch (error) {
                             skipped++;

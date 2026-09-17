@@ -137,6 +137,58 @@ Es **otra unidad de compilación**. Incluirla en la clase de la entidad genera
 X++ que no compila. Por eso solo se lee el `<SourceCode>` que es hijo directo de
 la raíz.
 
+## Exportar una carpeta entera
+
+El comando de carpeta recorre el árbol y escribe un `.xpp` por cada XML que
+traiga código. Antes de empezar pregunta cómo ordenar la salida, con dos modos:
+
+| Modo | Resultado |
+|---|---|
+| `mirror` | `out/MiModulo/AxClass/Foo.xpp` — el mismo árbol que el origen |
+| `byType` | `out/AxClass/Foo.xpp` — una carpeta por tipo, aplanado |
+| `xppSource` | `out/MiModelo/AxClass_Foo.xpp` — una carpeta por modelo, tipo como prefijo |
+
+`xppSource` existe para depurar. Un paquete desplegado como binarios no trae
+fuentes, así que el depurador no tiene adónde entrar: con las fuentes dispuestas
+de esta forma las encuentra, y el X++ de un paquete binario pasa a ser
+depurable. Es la única de las tres disposiciones que habilita algo que de otro
+modo no se puede hacer.
+
+El prefijo del tipo no es decorativo, y es consecuencia de lo anterior: como
+todo el modelo cae en una sola carpeta, sin el prefijo una clase y un formulario
+que se llamen igual escribirían sobre el mismo archivo.
+
+El modelo se deduce de la ubicación. Un repositorio de metadatos guarda cada
+artefacto en `<Paquete>/<Modelo>/<Tipo>/<Nombre>.xml`, así que el modelo es la
+carpeta que contiene a la del tipo. Solo se sube ese nivel cuando la carpeta que
+contiene al archivo es efectivamente la del tipo: si el árbol no sigue la
+convención, subir a ciegas tomaría como modelo algo que no lo es.
+
+Se pregunta en vez de configurarse porque la respuesta depende de para qué es la
+exportación y no de una preferencia estable: espejar sirve para comparar contra
+el repositorio de origen, y agrupar por tipo sirve para leer todos los artefactos
+de una clase de corrido.
+
+Las carpetas se crean recién al escribir un archivo. Por eso un directorio del
+origen cuyos XML no tengan código X++ —tablas de staging, enums, extensiones
+puramente declarativas— no deja una carpeta vacía del otro lado: la estructura
+que se reproduce es la de lo que efectivamente se generó, no la del origen
+completo.
+
+Se saltean `bin`, `XppMetadata` y `Descriptor`, que son salida del build.
+`XppMetadata` en particular trae firmas de métodos sin cuerpo, así que incluirla
+generaría archivos que parecen código y no lo son.
+
+El cálculo de la ruta destino vive en `src/exportLayout.ts`, fuera de la capa de
+VS Code y con tests propios: es aritmética de rutas —separadores de Windows,
+rutas relativas, el archivo que cuelga de la raíz— y es fácil de equivocar.
+
+Lo mismo con `src/pathPicker.ts`, que descompone una ruta a medio escribir para
+poder ofrecer las subcarpetas que siguen. Ahí los casos borde son la raíz de un
+disco —`C:\` es una carpeta y `C:` es otra cosa—, los separadores mezclados
+—en Windows mucha gente escribe con barra normal— y el segmento a medio tipear.
+Se usa cuando `xpp.transpile.folderPicker` está en `quickPick`.
+
 ## Verificación
 
 Dos invariantes, que se aplican a todos los fixtures y a repositorios reales:
