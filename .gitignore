@@ -33,3 +33,6 @@ npm-debug.log*
 # Sistema operativo
 .DS_Store
 Thumbs.db
+
+# Checkpoint de trabajo: identidades y tenant IDs. El repo es publico.
+/CHECKPOINT.md
