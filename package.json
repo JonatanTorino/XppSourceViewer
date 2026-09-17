@@ -180,7 +180,7 @@
         "xpp.transpile.preserveFocus": {
           "type": "boolean",
           "default": true,
-          "description": "Keep the cursor in the XML when the view opens beside it. Without this, focus jumps to the X++ view."
+          "description": "Keep the cursor in the XML when the view opens by itself, beside the XML. This only applies to automatic opening: running the command or pressing the shortcut always moves focus to the X++ view, because that is what you asked for."
         },
         "xpp.transpile.stripDocComments": {
           "type": "boolean",

@@ -59,7 +59,7 @@ XML, the export button on the X++ view.
 | Setting | Default | What it controls |
 |---|---|---|
 | `xpp.transpile.viewColumn` | `beside` | `beside` · `active` · `replace` |
-| `xpp.transpile.preserveFocus` | `true` | Keep the cursor in the XML when the view opens beside it |
+| `xpp.transpile.preserveFocus` | `true` | Keep the cursor in the XML when the view opens **by itself**. The command and the shortcut always move focus |
 
 ### What gets generated
 

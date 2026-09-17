@@ -220,10 +220,14 @@ async function transpileFile(uri: vscode.Uri): Promise<TranspileResult | undefin
  *
  * `silent` evita los avisos cuando la apertura la dispara el usuario al abrir un
  * archivo cualquiera, en vez de pedirla explícitamente.
+ *
+ * `preserveFocus` por defecto es `false`: quien invoca el comando pidió ver el
+ * X++, y dejarle el cursor en el XML es lo contrario de lo que pidió. Solo la
+ * apertura automática lo pasa en `true`, porque ahí nadie pidió nada.
  */
 export async function openPreview(
     source: vscode.Uri,
-    options: { silent?: boolean } = {}
+    options: { silent?: boolean; preserveFocus?: boolean } = {}
 ): Promise<boolean> {
     const config = readConfig(source);
     const result = await transpileFile(source);
@@ -260,7 +264,7 @@ export async function openPreview(
     await vscode.window.showTextDocument(document, {
         preview: true,
         viewColumn: resolveViewColumn(config.viewColumn),
-        preserveFocus: config.preserveFocus
+        preserveFocus: options.preserveFocus ?? false
     });
     return true;
 }

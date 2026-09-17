@@ -122,7 +122,12 @@ export function activate(context: vscode.ExtensionContext): void {
             }
 
             try {
-                await openPreview(document.uri, { silent: true });
+                // Nadie pidió esto: se abrio un XML y la vista aparece sola. Por eso
+                // respeta `preserveFocus`, que existe para no interrumpir.
+                await openPreview(document.uri, {
+                    silent: true,
+                    preserveFocus: config.preserveFocus
+                });
             } catch (error) {
                 output.error(error instanceof Error ? error.message : String(error));
             }
