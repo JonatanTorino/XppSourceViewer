@@ -219,7 +219,7 @@
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -w -p ./",
-    "test": "npm run compile:core && node --test out/test/transpiler.test.js",
+    "test": "npm run compile:core && node --test out/test/transpiler.test.js out/test/exportLayout.test.js",
     "vscode:prepublish": "npm run compile",
     "package": "npx --yes @vscode/vsce package",
     "publish": "npx --yes @vscode/vsce publish",

@@ -10,6 +10,7 @@ import * as vscode from 'vscode';
 import { readConfig, resolveViewColumn } from '../config';
 import { XPP_SCHEME } from '../extension';
 import type { Logger } from '../logger';
+import { type ExportLayout, targetDirFor } from '../exportLayout';
 import { NotMetadataError, transpile, type TranspileResult } from '../transpiler';
 
 /**
@@ -269,6 +270,39 @@ export async function openPreview(
     return true;
 }
 
+/**
+ * Pregunta cómo ordenar la salida.
+ *
+ * Se pregunta en vez de configurarse porque la respuesta depende de para qué es
+ * la exportación, no de una preferencia estable: espejar sirve para comparar
+ * contra el repositorio de origen, y agrupar por tipo sirve para leer todo un
+ * tipo de artefacto de corrido. La misma persona quiere una u otra según el día.
+ *
+ * Devuelve `undefined` si se cancela, que es distinto de elegir un default.
+ */
+async function askExportLayout(): Promise<ExportLayout | undefined> {
+    const picked = await vscode.window.showQuickPick(
+        [
+            {
+                label: 'Mirror source folders',
+                detail:
+                    'Keep the folder structure of the metadata repository. Only the folders that end up with a file are created.',
+                layout: 'mirror' as const
+            },
+            {
+                label: 'Group by artifact type',
+                detail: 'One folder per artifact type: AxClass, AxForm, AxTable...',
+                layout: 'byType' as const
+            }
+        ],
+        {
+            title: 'Export metadata folder to .xpp',
+            placeHolder: 'How should the exported files be organised?'
+        }
+    );
+    return picked?.layout;
+}
+
 export function registerTranspileCommands(
     context: vscode.ExtensionContext,
     output: Logger
@@ -384,6 +418,11 @@ export function registerTranspileCommands(
             }
             const outputRoot = destination[0].fsPath;
 
+            const layout = await askExportLayout();
+            if (!layout) {
+                return;
+            }
+
             await vscode.window.withProgress(
                 {
                     location: vscode.ProgressLocation.Notification,
@@ -417,7 +456,13 @@ export function registerTranspileCommands(
                                 skipped++;
                                 continue;
                             }
-                            const targetDir = join(outputRoot, result.kind);
+                            const targetDir = targetDirFor(
+                                layout,
+                                outputRoot,
+                                root.fsPath,
+                                file.fsPath,
+                                result.kind
+                            );
                             await fs.mkdir(targetDir, { recursive: true });
                             await fs.writeFile(
                                 join(targetDir, `${result.name}.xpp`),

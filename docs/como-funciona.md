@@ -137,6 +137,35 @@ Es **otra unidad de compilación**. Incluirla en la clase de la entidad genera
 X++ que no compila. Por eso solo se lee el `<SourceCode>` que es hijo directo de
 la raíz.
 
+## Exportar una carpeta entera
+
+El comando de carpeta recorre el árbol y escribe un `.xpp` por cada XML que
+traiga código. Antes de empezar pregunta cómo ordenar la salida, con dos modos:
+
+| Modo | Resultado |
+|---|---|
+| `mirror` | `out/MiModulo/AxClass/Foo.xpp` — el mismo árbol que el origen |
+| `byType` | `out/AxClass/Foo.xpp` — una carpeta por tipo, aplanado |
+
+Se pregunta en vez de configurarse porque la respuesta depende de para qué es la
+exportación y no de una preferencia estable: espejar sirve para comparar contra
+el repositorio de origen, y agrupar por tipo sirve para leer todos los artefactos
+de una clase de corrido.
+
+Las carpetas se crean recién al escribir un archivo. Por eso un directorio del
+origen cuyos XML no tengan código X++ —tablas de staging, enums, extensiones
+puramente declarativas— no deja una carpeta vacía del otro lado: la estructura
+que se reproduce es la de lo que efectivamente se generó, no la del origen
+completo.
+
+Se saltean `bin`, `XppMetadata` y `Descriptor`, que son salida del build.
+`XppMetadata` en particular trae firmas de métodos sin cuerpo, así que incluirla
+generaría archivos que parecen código y no lo son.
+
+El cálculo de la ruta destino vive en `src/exportLayout.ts`, fuera de la capa de
+VS Code y con tests propios: es aritmética de rutas —separadores de Windows,
+rutas relativas, el archivo que cuelga de la raíz— y es fácil de equivocar.
+
 ## Verificación
 
 Dos invariantes, que se aplican a todos los fixtures y a repositorios reales:

@@ -3,5 +3,10 @@
   "compilerOptions": {
     "types": ["node"]
   },
-  "include": ["src/transpiler/**/*.ts", "src/server/**/*.ts", "test/**/*.ts"]
+  "include": [
+    "src/transpiler/**/*.ts",
+    "src/exportLayout.ts",
+    "src/server/**/*.ts",
+    "test/**/*.ts"
+  ]
 }

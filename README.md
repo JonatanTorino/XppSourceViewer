@@ -20,7 +20,11 @@ of the XML — the form itself, its data sources, the fields of each data source
 and the controls. All of them are recovered, nested the way the Visual Studio
 designer shows them.
 
-**Export to `.xpp`.** A single file, or an entire module tree.
+**Export to `.xpp`.** A single file, or an entire module tree. When exporting a
+folder it walks every subfolder and asks how to lay out the result: mirroring the
+source structure, or grouped by artifact type. Either way only the folders that
+end up with a file are created — a directory whose XMLs carry no X++ leaves
+nothing behind.
 
 **Control over when it shows up.** Automatic opening is off by default. If you
 turn it on, you can limit it by artifact type or by path, and pause it with one
@@ -36,11 +40,30 @@ Supports `AxClass`, `AxTable`, `AxForm`, `AxQuery`, `AxView` and
 |---|---|---|
 | **X++: View as X++** | `Ctrl+Alt+X` | From the XML it opens the view; from the view it goes back to the XML |
 | **X++: Export to .xpp file** | — | Saves the X++ wherever you choose |
-| **X++: Export metadata folder to .xpp** | — | Exports a whole tree, grouped by type |
+| **X++: Export metadata folder to .xpp** | — | Exports a whole tree, mirroring the source folders or grouped by type |
 | **X++: Pause or resume automatic opening** | — | Pauses automatic opening for the rest of the session |
 
 The first two are also buttons in the editor title bar: the view button on the
 XML, the export button on the X++ view.
+
+### Exporting a whole folder
+
+`X++: Export metadata folder to .xpp` asks for a source folder, a destination
+folder, and how to organise the output:
+
+| Layout | Result |
+|---|---|
+| **Mirror source folders** | `out/MyModule/AxClass/Foo.xpp` — the same tree as the metadata repository |
+| **Group by artifact type** | `out/AxClass/Foo.xpp` — one folder per type, flattened |
+
+Mirroring is the one to pick when the export is going to be compared against the
+repository it came from; grouping by type is better for reading every artifact
+of one kind in a row.
+
+Folders are created only when a file is actually written, so subfolders whose
+XMLs carry no X++ — staging tables, enums, pure extensions — do not show up as
+empty directories. `bin`, `XppMetadata` and `Descriptor` are skipped: they are
+build output, not source.
 
 ## Settings
 
