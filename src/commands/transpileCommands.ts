@@ -285,19 +285,23 @@ async function askExportLayout(): Promise<ExportLayout | undefined> {
         [
             {
                 label: 'Mirror source folders',
+                description: 'MyModule/AxClass/Foo.xpp',
                 detail:
-                    'Keep the folder structure of the metadata repository. Only the folders that end up with a file are created.',
+                    'Keeps the structure of the metadata repository, so the export can be compared against where it came from.',
                 layout: 'mirror' as const
             },
             {
                 label: 'Group by artifact type',
-                detail: 'One folder per artifact type: AxClass, AxForm, AxTable...',
+                description: 'AxClass/Foo.xpp',
+                detail:
+                    'One folder per type. Good for reading every class, or every form, one after another.',
                 layout: 'byType' as const
             },
             {
                 label: 'XppSource convention',
+                description: 'MyModel/AxClass_Foo.xpp',
                 detail:
-                    'One folder per model, with the type as a prefix: MyModel/AxClass_Foo.xpp. The same shape D365FO uses for its own XppSource folder.',
+                    'One folder per model, type as a prefix. This is the layout the debugger looks for, so you can step into the X++ of packages that are deployed as binaries with no source.',
                 layout: 'xppSource' as const
             }
         ],

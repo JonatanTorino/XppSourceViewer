@@ -58,10 +58,16 @@ folder, and how to organise the output:
 | **XppSource convention** | `out/MyModel/AxClass_Foo.xpp` — one folder per model, type as a prefix |
 
 Mirroring is the one to pick when the export is going to be compared against the
-repository it came from; grouping by type is better for reading every artifact
-of one kind in a row; and **XppSource** reproduces the shape D365FO itself uses
-for the `XppSource` folder it generates, which is what you want when something
-downstream expects that convention.
+repository it came from, and grouping by type is better for reading every
+artifact of one kind in a row.
+
+**XppSource is the one that buys you something you cannot get otherwise.** A
+package deployed as binaries carries no source, so the debugger has nothing to
+step into. Laid out this way the sources land where it looks for them, and X++
+inside a binary-only package becomes debuggable. That is also why the type is
+part of the file name rather than a folder: everything in a model shares one
+directory, so without the prefix a class and a form with the same name would
+overwrite each other.
 
 The model for **XppSource** is taken from the folder that holds the artifact's
 type folder, because a metadata repository stores everything as

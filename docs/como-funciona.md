@@ -148,10 +148,15 @@ traiga código. Antes de empezar pregunta cómo ordenar la salida, con dos modos
 | `byType` | `out/AxClass/Foo.xpp` — una carpeta por tipo, aplanado |
 | `xppSource` | `out/MiModelo/AxClass_Foo.xpp` — una carpeta por modelo, tipo como prefijo |
 
-`xppSource` reproduce la forma que usa el propio D365FO para la carpeta
-`XppSource` que genera. El prefijo del tipo no es decorativo: sin él, una clase
-y un formulario que se llamen igual escribirían sobre el mismo archivo, porque
-en ese modo todo el modelo cae en una sola carpeta.
+`xppSource` existe para depurar. Un paquete desplegado como binarios no trae
+fuentes, así que el depurador no tiene adónde entrar: con las fuentes dispuestas
+de esta forma las encuentra, y el X++ de un paquete binario pasa a ser
+depurable. Es la única de las tres disposiciones que habilita algo que de otro
+modo no se puede hacer.
+
+El prefijo del tipo no es decorativo, y es consecuencia de lo anterior: como
+todo el modelo cae en una sola carpeta, sin el prefijo una clase y un formulario
+que se llamen igual escribirían sobre el mismo archivo.
 
 El modelo se deduce de la ubicación. Un repositorio de metadatos guarda cada
 artefacto en `<Paquete>/<Modelo>/<Tipo>/<Nombre>.xml`, así que el modelo es la
