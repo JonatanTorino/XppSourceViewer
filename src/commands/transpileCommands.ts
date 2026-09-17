@@ -3,14 +3,14 @@
  */
 
 import { promises as fs } from 'node:fs';
-import { basename, extname, join } from 'node:path';
+import { basename, dirname, extname, join } from 'node:path';
 
 import * as vscode from 'vscode';
 
 import { readConfig, resolveViewColumn } from '../config';
 import { XPP_SCHEME } from '../extension';
 import type { Logger } from '../logger';
-import { type ExportLayout, targetDirFor } from '../exportLayout';
+import { type ExportLayout, targetPathFor } from '../exportLayout';
 import { NotMetadataError, transpile, type TranspileResult } from '../transpiler';
 
 /**
@@ -293,6 +293,12 @@ async function askExportLayout(): Promise<ExportLayout | undefined> {
                 label: 'Group by artifact type',
                 detail: 'One folder per artifact type: AxClass, AxForm, AxTable...',
                 layout: 'byType' as const
+            },
+            {
+                label: 'XppSource convention',
+                detail:
+                    'One folder per model, with the type as a prefix: MyModel/AxClass_Foo.xpp. The same shape D365FO uses for its own XppSource folder.',
+                layout: 'xppSource' as const
             }
         ],
         {
@@ -456,19 +462,16 @@ export function registerTranspileCommands(
                                 skipped++;
                                 continue;
                             }
-                            const targetDir = targetDirFor(
+                            const target = targetPathFor(
                                 layout,
                                 outputRoot,
                                 root.fsPath,
                                 file.fsPath,
-                                result.kind
+                                result.kind,
+                                result.name
                             );
-                            await fs.mkdir(targetDir, { recursive: true });
-                            await fs.writeFile(
-                                join(targetDir, `${result.name}.xpp`),
-                                result.xpp,
-                                'utf8'
-                            );
+                            await fs.mkdir(dirname(target), { recursive: true });
+                            await fs.writeFile(target, result.xpp, 'utf8');
                             written++;
                         } catch (error) {
                             skipped++;

@@ -146,6 +146,18 @@ traiga código. Antes de empezar pregunta cómo ordenar la salida, con dos modos
 |---|---|
 | `mirror` | `out/MiModulo/AxClass/Foo.xpp` — el mismo árbol que el origen |
 | `byType` | `out/AxClass/Foo.xpp` — una carpeta por tipo, aplanado |
+| `xppSource` | `out/MiModelo/AxClass_Foo.xpp` — una carpeta por modelo, tipo como prefijo |
+
+`xppSource` reproduce la forma que usa el propio D365FO para la carpeta
+`XppSource` que genera. El prefijo del tipo no es decorativo: sin él, una clase
+y un formulario que se llamen igual escribirían sobre el mismo archivo, porque
+en ese modo todo el modelo cae en una sola carpeta.
+
+El modelo se deduce de la ubicación. Un repositorio de metadatos guarda cada
+artefacto en `<Paquete>/<Modelo>/<Tipo>/<Nombre>.xml`, así que el modelo es la
+carpeta que contiene a la del tipo. Solo se sube ese nivel cuando la carpeta que
+contiene al archivo es efectivamente la del tipo: si el árbol no sigue la
+convención, subir a ciegas tomaría como modelo algo que no lo es.
 
 Se pregunta en vez de configurarse porque la respuesta depende de para qué es la
 exportación y no de una preferencia estable: espejar sirve para comparar contra

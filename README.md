@@ -55,10 +55,19 @@ folder, and how to organise the output:
 |---|---|
 | **Mirror source folders** | `out/MyModule/AxClass/Foo.xpp` — the same tree as the metadata repository |
 | **Group by artifact type** | `out/AxClass/Foo.xpp` — one folder per type, flattened |
+| **XppSource convention** | `out/MyModel/AxClass_Foo.xpp` — one folder per model, type as a prefix |
 
 Mirroring is the one to pick when the export is going to be compared against the
 repository it came from; grouping by type is better for reading every artifact
-of one kind in a row.
+of one kind in a row; and **XppSource** reproduces the shape D365FO itself uses
+for the `XppSource` folder it generates, which is what you want when something
+downstream expects that convention.
+
+The model for **XppSource** is taken from the folder that holds the artifact's
+type folder, because a metadata repository stores everything as
+`<Package>/<Model>/<Type>/<Name>.xml`. When a tree does not follow that
+convention the containing folder is used as-is, rather than climbing a level and
+picking up something that is not a model.
 
 Folders are created only when a file is actually written, so subfolders whose
 XMLs carry no X++ — staging tables, enums, pure extensions — do not show up as

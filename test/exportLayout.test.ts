@@ -11,88 +11,140 @@ import assert from 'node:assert/strict';
 import { join, sep } from 'node:path';
 import { describe, it } from 'node:test';
 
-import { targetDirFor } from '../src/exportLayout';
+import { targetPathFor } from '../src/exportLayout';
 
 const SOURCE = join('C:', 'Metadata');
 const OUT = join('C:', 'export');
 
+/** La ruta tipica de un repositorio de metadatos: paquete, modelo, tipo. */
+const NESTED = join(SOURCE, 'MiPaquete', 'MiModelo', 'AxClass', 'Foo.xml');
+
 describe('byType', () => {
     it('agrupa por tipo sin mirar de dónde salió el archivo', () => {
-        const a = targetDirFor(
+        const a = targetPathFor('byType', OUT, SOURCE, NESTED, 'AxClass', 'Foo');
+        const b = targetPathFor(
             'byType',
             OUT,
             SOURCE,
-            join(SOURCE, 'MyModule', 'AxClass', 'Foo.xml'),
-            'AxClass'
+            join(SOURCE, 'Otro', 'AxClass', 'Foo.xml'),
+            'AxClass',
+            'Foo'
         );
-        const b = targetDirFor('byType', OUT, SOURCE, join(SOURCE, 'Otro', 'Bar.xml'), 'AxClass');
 
-        assert.equal(a, join(OUT, 'AxClass'));
+        assert.equal(a, join(OUT, 'AxClass', 'Foo.xpp'));
         assert.equal(a, b);
     });
 });
 
 describe('mirror', () => {
     it('reproduce la estructura de origen', () => {
-        const target = targetDirFor(
-            'mirror',
-            OUT,
-            SOURCE,
-            join(SOURCE, 'MyModule', 'AxClass', 'Foo.xml'),
-            'AxClass'
+        assert.equal(
+            targetPathFor('mirror', OUT, SOURCE, NESTED, 'AxClass', 'Foo'),
+            join(OUT, 'MiPaquete', 'MiModelo', 'AxClass', 'Foo.xpp')
         );
-
-        assert.equal(target, join(OUT, 'MyModule', 'AxClass'));
     });
 
     it('un archivo en la raíz del origen va a la raíz de la salida', () => {
-        const target = targetDirFor('mirror', OUT, SOURCE, join(SOURCE, 'Foo.xml'), 'AxClass');
-
-        assert.equal(target, OUT);
-    });
-
-    it('no deja un separador colgando', () => {
-        const target = targetDirFor('mirror', OUT, SOURCE, join(SOURCE, 'Foo.xml'), 'AxClass');
-
-        assert.ok(!target.endsWith(sep), `la ruta termina en separador: ${target}`);
-    });
-
-    it('conserva la profundidad, por honda que sea', () => {
-        const deep = join(SOURCE, 'a', 'b', 'c', 'd', 'AxForm', 'Bar.xml');
-        const target = targetDirFor('mirror', OUT, SOURCE, deep, 'AxForm');
-
-        assert.equal(target, join(OUT, 'a', 'b', 'c', 'd', 'AxForm'));
+        assert.equal(
+            targetPathFor('mirror', OUT, SOURCE, join(SOURCE, 'Foo.xml'), 'AxClass', 'Foo'),
+            join(OUT, 'Foo.xpp')
+        );
     });
 
     it('la salida nunca se escapa de la carpeta destino', () => {
-        // La invariante que importa: mientras el archivo esté debajo del origen,
-        // el resultado cae adentro de la salida. Es lo que impide que una
-        // exportacion escriba fuera de donde se le dijo.
+        // La invariante que importa: mientras el archivo este debajo del
+        // origen, el resultado cae adentro de la salida. Es lo que impide que
+        // una exportacion escriba fuera de donde se le dijo.
         const files = [
             join(SOURCE, 'Foo.xml'),
-            join(SOURCE, 'MyModule', 'Foo.xml'),
-            join(SOURCE, 'MyModule', 'AxClass', 'Foo.xml'),
-            join(SOURCE, 'a', 'b', 'c', 'Foo.xml')
+            join(SOURCE, 'MiModelo', 'Foo.xml'),
+            NESTED,
+            join(SOURCE, 'a', 'b', 'c', 'AxClass', 'Foo.xml')
         ];
 
         for (const file of files) {
-            const target = targetDirFor('mirror', OUT, SOURCE, file, 'AxClass');
-            assert.ok(
-                target === OUT || target.startsWith(OUT + sep),
-                `${file} se escapo a ${target}`
-            );
+            const target = targetPathFor('mirror', OUT, SOURCE, file, 'AxClass', 'Foo');
+            assert.ok(target.startsWith(OUT + sep), `${file} se escapo a ${target}`);
             assert.ok(!target.includes('..'), `${file} trepo con .. hasta ${target}`);
         }
     });
 });
 
-describe('los dos modos', () => {
-    it('difieren cuando el artefacto está anidado', () => {
-        const file = join(SOURCE, 'MyModule', 'AxClass', 'Foo.xml');
-
-        assert.notEqual(
-            targetDirFor('mirror', OUT, SOURCE, file, 'AxClass'),
-            targetDirFor('byType', OUT, SOURCE, file, 'AxClass')
+describe('xppSource', () => {
+    it('una carpeta por modelo, con el tipo como prefijo del archivo', () => {
+        assert.equal(
+            targetPathFor('xppSource', OUT, SOURCE, NESTED, 'AxClass', 'Foo'),
+            join(OUT, 'MiModelo', 'AxClass_Foo.xpp')
         );
+    });
+
+    it('el paquete no aparece: la carpeta es la del modelo', () => {
+        const target = targetPathFor('xppSource', OUT, SOURCE, NESTED, 'AxClass', 'Foo');
+
+        assert.ok(!target.includes('MiPaquete'), `el paquete se colo en ${target}`);
+    });
+
+    it('artefactos de distinto tipo y mismo nombre no se pisan', () => {
+        // Sin el prefijo del tipo, una clase y un formulario con el mismo
+        // nombre escribirian sobre el mismo archivo. Es justamente lo que la
+        // convencion evita.
+        const clase = targetPathFor('xppSource', OUT, SOURCE, NESTED, 'AxClass', 'Foo');
+        const form = targetPathFor(
+            'xppSource',
+            OUT,
+            SOURCE,
+            join(SOURCE, 'MiPaquete', 'MiModelo', 'AxForm', 'Foo.xml'),
+            'AxForm',
+            'Foo'
+        );
+
+        assert.notEqual(clase, form);
+        assert.equal(form, join(OUT, 'MiModelo', 'AxForm_Foo.xpp'));
+    });
+
+    it('agrupa en el mismo modelo lo que viene de tipos distintos', () => {
+        const clase = targetPathFor('xppSource', OUT, SOURCE, NESTED, 'AxClass', 'Foo');
+        const tabla = targetPathFor(
+            'xppSource',
+            OUT,
+            SOURCE,
+            join(SOURCE, 'MiPaquete', 'MiModelo', 'AxTable', 'Bar.xml'),
+            'AxTable',
+            'Bar'
+        );
+
+        assert.equal(join(clase, '..'), join(tabla, '..'));
+    });
+
+    it('no sube un nivel cuando la carpeta no es la del tipo', () => {
+        // Un arbol que no sigue la convencion: subir a ciegas tomaria como
+        // modelo una carpeta que no lo es.
+        const suelto = join(SOURCE, 'MiModelo', 'Foo.xml');
+
+        assert.equal(
+            targetPathFor('xppSource', OUT, SOURCE, suelto, 'AxClass', 'Foo'),
+            join(OUT, 'MiModelo', 'AxClass_Foo.xpp')
+        );
+    });
+
+    it('la carpeta del tipo se reconoce sin importar mayúsculas', () => {
+        const raro = join(SOURCE, 'MiPaquete', 'MiModelo', 'axclass', 'Foo.xml');
+
+        assert.equal(
+            targetPathFor('xppSource', OUT, SOURCE, raro, 'AxClass', 'Foo'),
+            join(OUT, 'MiModelo', 'AxClass_Foo.xpp')
+        );
+    });
+});
+
+describe('los tres modos', () => {
+    it('dan rutas distintas para el mismo artefacto', () => {
+        const rutas = new Set(
+            (['mirror', 'byType', 'xppSource'] as const).map((layout) =>
+                targetPathFor(layout, OUT, SOURCE, NESTED, 'AxClass', 'Foo')
+            )
+        );
+
+        assert.equal(rutas.size, 3);
     });
 });
