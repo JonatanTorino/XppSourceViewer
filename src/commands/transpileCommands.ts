@@ -126,6 +126,60 @@ function sourceOfPreview(uri: vscode.Uri): vscode.Uri | undefined {
     return undefined;
 }
 
+/**
+ * ¿El comando se invocó parado sobre una vista X++? Devuelve su URI.
+ *
+ * Solo se mira el editor activo cuando el menú no pasó nada. Si el menú pasó un
+ * archivo —el clic derecho sobre un XML en el explorador— la vista que esté
+ * abierta puede ser de otro artefacto, y cerrarla sería cerrar lo que no toca.
+ */
+function invokedFromPreview(candidate?: vscode.Uri): vscode.Uri | undefined {
+    if (candidate) {
+        return candidate.scheme === XPP_SCHEME ? candidate : undefined;
+    }
+    const active = vscode.window.activeTextEditor?.document.uri;
+    return active?.scheme === XPP_SCHEME ? active : undefined;
+}
+
+/** La pestaña abierta con ese URI, si hay alguna. */
+function tabFor(uri: vscode.Uri): vscode.Tab | undefined {
+    const key = uri.toString();
+    for (const group of vscode.window.tabGroups.all) {
+        for (const tab of group.tabs) {
+            if (tab.input instanceof vscode.TabInputText && tab.input.uri.toString() === key) {
+                return tab;
+            }
+        }
+    }
+    return undefined;
+}
+
+/**
+ * Deja el archivo recién escrito en el lugar que ocupaba la vista virtual.
+ *
+ * Una vez que el `.xpp` existe en el disco, la vista es una copia redundante del
+ * mismo contenido: dejar las dos abiertas obliga a elegir cuál mirar, y la que
+ * no se puede editar es justamente la que queda arriba.
+ *
+ * Se abre el archivo primero y se cierra la vista después. Al revés, cerrar la
+ * última pestaña de un grupo lo colapsa, y el archivo terminaría apareciendo en
+ * otra columna.
+ */
+async function replacePreviewWithFile(
+    previewUri: vscode.Uri,
+    target: vscode.Uri
+): Promise<void> {
+    const tab = tabFor(previewUri);
+    const document = await vscode.workspace.openTextDocument(target);
+    await vscode.window.showTextDocument(document, {
+        viewColumn: tab?.group.viewColumn ?? vscode.ViewColumn.Active,
+        preview: false
+    });
+    if (tab) {
+        await vscode.window.tabGroups.close(tab);
+    }
+}
+
 /** Resuelve el XML sobre el que actuar: el que pasó el menú, o el del editor activo. */
 async function resolveSource(candidate?: vscode.Uri): Promise<vscode.Uri | undefined> {
     // Los botones del título del editor pasan el URI del editor activo, que sobre
@@ -247,6 +301,9 @@ export function registerTranspileCommands(
 
     context.subscriptions.push(
         vscode.commands.registerCommand('xpp.transpile.saveAs', async (candidate?: vscode.Uri) => {
+            // Hay que mirarlo antes de resolver: `resolveSource` desenvuelve la
+            // vista hasta el XML de origen y se pierde de donde vino el comando.
+            const preview = invokedFromPreview(candidate);
             const source = await resolveSource(candidate);
             if (!source) {
                 return;
@@ -273,13 +330,17 @@ export function registerTranspileCommands(
                 await fs.writeFile(target.fsPath, result.xpp, 'utf8');
                 output.info(`Exported ${result.kind} ${result.name} to ${target.fsPath}`);
 
-                // Exportar es para tener el archivo, no necesariamente para
-                // leerlo ahora. Abrirlo solo, como se hacia antes, sacaba del
-                // contexto a quien seguia trabajando en el XML, y contradecia
-                // el criterio del resto de la extension: la vista se abre con
-                // `preserveFocus` justamente para no interrumpir. El boton deja
-                // la decision del lado de quien exporta, y deja este comando
-                // consistente con el de carpeta, que solo resume.
+                if (preview) {
+                    // Se exporto parado sobre la vista: el archivo real ocupa su
+                    // lugar. La vista ya no aporta nada, y es la version que no
+                    // se puede editar.
+                    await replacePreviewWithFile(preview, target);
+                    return;
+                }
+
+                // Desde el explorador no hay ninguna vista que reemplazar, y
+                // abrir el archivo sacaria del contexto a quien solo queria el
+                // .xpp en el disco. El boton deja esa decision de su lado.
                 const answer = await vscode.window.showInformationMessage(
                     `Exported ${result.kind} ${result.name}.`,
                     'Open'
