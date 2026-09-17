@@ -271,9 +271,23 @@ export function registerTranspileCommands(
                 }
 
                 await fs.writeFile(target.fsPath, result.xpp, 'utf8');
-                const open = await vscode.workspace.openTextDocument(target);
-                await vscode.window.showTextDocument(open);
                 output.info(`Exported ${result.kind} ${result.name} to ${target.fsPath}`);
+
+                // Exportar es para tener el archivo, no necesariamente para
+                // leerlo ahora. Abrirlo solo, como se hacia antes, sacaba del
+                // contexto a quien seguia trabajando en el XML, y contradecia
+                // el criterio del resto de la extension: la vista se abre con
+                // `preserveFocus` justamente para no interrumpir. El boton deja
+                // la decision del lado de quien exporta, y deja este comando
+                // consistente con el de carpeta, que solo resume.
+                const answer = await vscode.window.showInformationMessage(
+                    `Exported ${result.kind} ${result.name}.`,
+                    'Open'
+                );
+                if (answer === 'Open') {
+                    const document = await vscode.workspace.openTextDocument(target);
+                    await vscode.window.showTextDocument(document);
+                }
             } catch (error) {
                 report(error);
             }
