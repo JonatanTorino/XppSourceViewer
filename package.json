@@ -2,7 +2,7 @@
   "name": "xpp-source-viewer",
   "displayName": "X++ Source Viewer for Dynamics 365 F&O",
   "description": "Read the X++ source hidden in your Dynamics 365 Finance & Operations metadata XML, reconstructed as readable .xpp.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "JonatanTorino",
   "license": "MIT",
   "engines": {
