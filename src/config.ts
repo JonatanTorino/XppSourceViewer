@@ -9,6 +9,7 @@ import * as vscode from 'vscode';
 
 export type AutoPreviewMode = 'never' | 'ask' | 'onOpen';
 export type ViewColumnMode = 'beside' | 'active' | 'replace';
+export type FolderPicker = 'dialog' | 'quickPick';
 
 export interface TranspileConfig {
     autoPreview: AutoPreviewMode;
@@ -22,6 +23,7 @@ export interface TranspileConfig {
     stripDocComments: boolean;
     headerComment: boolean;
     outputDirectory: string;
+    folderPicker: FolderPicker;
 }
 
 export function readConfig(scope?: vscode.Uri): TranspileConfig {
@@ -37,7 +39,8 @@ export function readConfig(scope?: vscode.Uri): TranspileConfig {
         eol: c.get<'crlf' | 'lf'>('transpile.eol', 'crlf'),
         stripDocComments: c.get<boolean>('transpile.stripDocComments', false),
         headerComment: c.get<boolean>('transpile.headerComment', false),
-        outputDirectory: c.get<string>('transpile.outputDirectory', '')
+        outputDirectory: c.get<string>('transpile.outputDirectory', ''),
+        folderPicker: c.get<FolderPicker>('transpile.folderPicker', 'dialog')
     };
 }
 

@@ -183,6 +183,12 @@ El cálculo de la ruta destino vive en `src/exportLayout.ts`, fuera de la capa d
 VS Code y con tests propios: es aritmética de rutas —separadores de Windows,
 rutas relativas, el archivo que cuelga de la raíz— y es fácil de equivocar.
 
+Lo mismo con `src/pathPicker.ts`, que descompone una ruta a medio escribir para
+poder ofrecer las subcarpetas que siguen. Ahí los casos borde son la raíz de un
+disco —`C:\` es una carpeta y `C:` es otra cosa—, los separadores mezclados
+—en Windows mucha gente escribe con barra normal— y el segmento a medio tipear.
+Se usa cuando `xpp.transpile.folderPicker` está en `quickPick`.
+
 ## Verificación
 
 Dos invariantes, que se aplican a todos los fixtures y a repositorios reales:

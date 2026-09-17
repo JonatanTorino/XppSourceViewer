@@ -201,6 +201,19 @@
           "default": "crlf",
           "description": "Line ending of the generated X++. D365FO uses CRLF."
         },
+        "xpp.transpile.folderPicker": {
+          "type": "string",
+          "enum": [
+            "dialog",
+            "quickPick"
+          ],
+          "default": "dialog",
+          "enumDescriptions": [
+            "The operating system folder dialog.",
+            "A box at the top of the editor that completes the path as you type, so you can pick folders with the arrow keys."
+          ],
+          "description": "How to ask for the source and destination folders when exporting a metadata folder."
+        },
         "xpp.transpile.outputDirectory": {
           "type": "string",
           "default": "",
@@ -219,7 +232,7 @@
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -w -p ./",
-    "test": "npm run compile:core && node --test out/test/transpiler.test.js out/test/exportLayout.test.js",
+    "test": "npm run compile:core && node --test out/test/transpiler.test.js out/test/exportLayout.test.js out/test/pathPicker.test.js",
     "vscode:prepublish": "npm run compile",
     "package": "npx --yes @vscode/vsce package",
     "publish": "npx --yes @vscode/vsce publish",

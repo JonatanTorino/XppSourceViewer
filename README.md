@@ -75,6 +75,20 @@ type folder, because a metadata repository stores everything as
 convention the containing folder is used as-is, rather than climbing a level and
 picking up something that is not a model.
 
+### Typing the folder instead of browsing for it
+
+By default both folders are asked for with the operating system dialog. Setting
+`xpp.transpile.folderPicker` to `quickPick` replaces it with a box at the top of
+the editor that completes the path as you type: the subfolders that match what
+you have written so far are offered below, and picking one with the arrow keys
+appends it and keeps going, so you can walk down a tree without finishing a
+single folder name. The first entry is always the path exactly as typed, to
+accept it and stop there. The destination box starts from the source folder,
+since the two are usually near each other.
+
+It is worth turning on when you already know where you are going; the dialog
+makes you browse a tree with the mouse even then.
+
 Folders are created only when a file is actually written, so subfolders whose
 XMLs carry no X++ — staging tables, enums, pure extensions — do not show up as
 empty directories. `bin`, `XppMetadata` and `Descriptor` are skipped: they are
@@ -107,6 +121,7 @@ build output, not source.
 | `xpp.transpile.stripDocComments` | `false` | Strip `///` documentation comments |
 | `xpp.transpile.headerComment` | `false` | Header with type, name and origin |
 | `xpp.transpile.outputDirectory` | *(empty)* | Target folder for exports |
+| `xpp.transpile.folderPicker` | `dialog` | How folders are asked for: the OS dialog, or a box that completes the path as you type |
 
 ### The status bar indicator
 

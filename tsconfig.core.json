@@ -6,6 +6,7 @@
   "include": [
     "src/transpiler/**/*.ts",
     "src/exportLayout.ts",
+    "src/pathPicker.ts",
     "src/server/**/*.ts",
     "test/**/*.ts"
   ]
